@@ -1,0 +1,27 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{% block title %}My amazing site{% endblock %}</title>
+</head>
+
+<body>
+    <div id="sidebar">
+        {% block sidebar %}
+        <ul>
+            <li><a href="/home/">Home</a></li>
+            {% if username %}
+            <li><a href="/logout/">Logout</a></li>
+            {% else %}
+            <li><a href="/signup/">Sign Up</a></li>
+            <li><a href="/login/">Login</a></li>
+            {% endif %}
+        </ul>
+        {% endblock %}
+    </div>
+
+    <div id="content">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
