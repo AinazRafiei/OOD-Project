@@ -19,10 +19,11 @@ def create_channel(request):
 
 def create_post(request):
     if request.method == 'POST':
-        form = PostForm(request.POST)
+        form = PostForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             return redirect('post_created')
     else:
         form = PostForm()
     return render(request, 'html/create_post.html', {'form': form})
+

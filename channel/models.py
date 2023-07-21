@@ -23,3 +23,4 @@ class Post(models.Model):
     content = models.CharField(max_length=1000)
     media = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True)
     channel_id = models.ForeignKey(Channel, on_delete=models.CASCADE)
+    is_vip = models.BooleanField(default=False)
