@@ -2,7 +2,6 @@ import time
 
 from django.db import models
 
-
 # Create your models here.
 from userauth.crypto import jwt_encode
 
@@ -19,3 +18,4 @@ class User(models.Model):
     def get_session_auth_hash(self):
         payload = {"username": self.username, "expires": int(time.time() + self.LOGIN_EXPIRATION)}
         return jwt_encode(payload)
+
