@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'userauth',
     'bootstrap5',
+    'channel',
 ]
 
 MIDDLEWARE = [

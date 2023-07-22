@@ -20,6 +20,7 @@ from django.contrib import admin
 from django.urls import path
 
 from userauth.views import SignUpView, LoginView, LogoutView, Home
+from channel.views import create_channel, create_post
 
 urlpatterns = [
                   path('admin/', admin.site.urls),
@@ -27,4 +28,7 @@ urlpatterns = [
                   path('login/', LoginView.as_view(), name='login'),
                   path('logout/', LogoutView.as_view(), name='logout'),
                   path('home/', Home.as_view(), name='home'),
+                  path('create_channel/', create_channel, name='create_channel'),
+                  path('create_post/', create_post, name='create_post'),
+
               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
