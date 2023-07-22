@@ -12,7 +12,7 @@ class User(models.Model):
     email = models.CharField(max_length=64, null=True, blank=True)
     phone_number = models.CharField(max_length=64, null=True, blank=True)
     password = models.CharField(max_length=256)
-    last_login = models.DateTimeField()
+    last_login = models.DateTimeField(null=True)
 
     LOGIN_EXPIRATION = 90 * 24 * 60 * 60  # 90 days
 
