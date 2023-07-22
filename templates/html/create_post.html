@@ -1,14 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Create Post</title>
-</head>
-<body>
-    <h1>Create Post</h1>
-    <form method="post" enctype="multipart/form-data">
+{% extends 'html/base.html' %}
+
+{% block title %}Create Post{% endblock title %}
+
+{% block content %}
+    <form method="post"  enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
-        <input type="submit" value="Create">
+        <button type="submit">Create</button>
     </form>
-</body>
-</html>
+{% endblock content %}

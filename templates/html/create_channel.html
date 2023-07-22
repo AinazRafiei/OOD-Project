@@ -1,14 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Create Channel</title>
-</head>
-<body>
-    <h1>Create Channel</h1>
-    <form method="POST" action="{% url 'create_channel' %}">
+{% extends 'html/base.html' %}
+
+{% block title %}Create Channel{% endblock title %}
+
+{% block content %}
+    <form method="post" action="{% url 'create_channel' %}">
         {% csrf_token %}
         {{ form.as_p }}
-        <input type="submit" value="Create">
+        <button type="submit">Create</button>
     </form>
-</body>
-</html>
+{% endblock content %}

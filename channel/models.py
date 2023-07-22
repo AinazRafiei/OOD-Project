@@ -1,23 +1,37 @@
 from django.db import models
+
 from userauth.models import User
 
 
 # Create your models here.
 
+
+class Membership(models.Model):
+    class Role(models.Choices):
+        Admin = 'admin'
+        Normal = 'normal'
+        Vip = 'vip'
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    channel = models.ForeignKey('Channel', on_delete=models.CASCADE)
+    role = models.CharField(choices=Role.choices, default=Role.Normal, max_length=10)
+
+
 class Channel(models.Model):
     name = models.CharField(max_length=64)
     owner_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    members = models.ManyToManyField(User, through=Membership, related_name="followings")
 
 
 class Media(models.Model):
-    size = models.IntegerField(max_length=10)
+    size = models.IntegerField()
     format = models.CharField(max_length=60)
     type = models.CharField(max_length=60)
-    duration = models.IntegerField(max_length=30, null=True)
+    duration = models.IntegerField(null=True)
 
 
 class Post(models.Model):
-    price = models.IntegerField(max_length=30, null=True)
+    price = models.IntegerField(null=True)
     title = models.CharField(max_length=200, null=True)
     summary = models.CharField(max_length=400, null=True)
     content = models.CharField(max_length=1000)

@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect
+from django.views import View
+
 from .forms import ChannelForm, PostForm
 
 
@@ -16,7 +18,6 @@ def create_channel(request):
     return render(request, 'html/create_channel.html', {'form': form})
 
 
-
 def create_post(request):
     if request.method == 'POST':
         form = PostForm(request.POST, request.FILES)
@@ -27,3 +28,7 @@ def create_post(request):
         form = PostForm()
     return render(request, 'html/create_post.html', {'form': form})
 
+
+class ChannelPostViews(View):
+    def get(self, request, channel_id, *args, **kwargs):
+        pass

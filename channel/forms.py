@@ -1,6 +1,6 @@
 from django import forms
-from .models import Channel, Post, Media
 
+from .models import Channel
 
 
 class ChannelForm(forms.ModelForm):
@@ -11,6 +11,7 @@ class ChannelForm(forms.ModelForm):
 
 from django import forms
 from .models import Post, Media
+
 
 class PostForm(forms.ModelForm):
     media_file = forms.FileField(required=False)
