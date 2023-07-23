@@ -16,6 +16,5 @@ class User(models.Model):
     LOGIN_EXPIRATION = 90 * 24 * 60 * 60  # 90 days
 
     def get_session_auth_hash(self):
-        payload = {"username": self.username, "expires": int(time.time() + self.LOGIN_EXPIRATION)}
+        payload = {"id": self.id, "username": self.username, "expires": int(time.time() + self.LOGIN_EXPIRATION)}
         return jwt_encode(payload)
-

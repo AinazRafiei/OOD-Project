@@ -5,7 +5,7 @@ from django.views import View
 from django.views.generic import CreateView, FormView
 
 from userauth.forms import SignUpForm, LoginForm
-from userauth.utils import get_username, get_user
+from userauth.utils import get_user
 
 
 class SignUpView(CreateView):
@@ -37,5 +37,5 @@ class LogoutView(View):
 class Home(View):
     def get(self, request, *args, **kwargs):
         user = get_user(request)
-        user.channels.all()
-        return render(request, 'html/home.html', {"username": user.username})
+        # user.channels.all()
+        return render(request, 'html/home.html', {"username": "hamed"})

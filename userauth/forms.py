@@ -32,7 +32,7 @@ class SignUpForm(ModelForm):
 
     field_order = ['username', 'identifier', 'password']
 
-    def clean_identifier(self):
+    def clean(self):
         identifier = self.cleaned_data['identifier']
         if re.fullmatch(email_regex, identifier):
             if User.objects.filter(email=identifier).exists():
@@ -44,7 +44,7 @@ class SignUpForm(ModelForm):
             self.cleaned_data['phone_number'] = identifier
         else:
             raise ValidationError("Email or Phone number is not valid!")
-        return identifier
+        return self.cleaned_data
 
     def clean_password(self):
         password = self.cleaned_data['password']
