@@ -2,6 +2,9 @@ from django.shortcuts import render, redirect, HttpResponse
 from django.views import View
 from .forms import ChannelForm, PostForm
 from .models import Channel, Post, Membership
+from userauth.utils import get_user, get_user_id
+from django.urls import reverse_lazy
+
 
 
 # Create your views here.
@@ -12,10 +15,10 @@ def create_channel(request):
         form = ChannelForm(request.POST)
         if form.is_valid():
             channel_name = form.data['name']
-            user_id = request.user.id
-            ch1 = Channel.objects.create(name=channel_name, owner=user_id)
+            user = get_user(request)
+            ch1 = Channel.objects.create(name=channel_name, owner=user)
             Channel.save(ch1)
-            return redirect('channel_created')
+            return redirect(reverse_lazy('home'))
     else:
         form = ChannelForm()
     return render(request, 'html/create_channel.html', {'form': form})
@@ -29,13 +32,12 @@ def create_post(request, channel_id):
             title = form.data['title']
             summary = form.data['summary']
             content = form.data['content']
-            media = form.data['media']
             is_vip = form.data['is_vip']
-            channel_id = channel_id
-            user_id = request.user.id
-            membership = Membership.objects.get(user_id=user_id)
+            channel = Channel.objects.get(id=channel_id)
+            user = get_user(request)
+            membership = Membership.objects.get(user=user, channel=channel)
             if membership.role == 'admin':
-                p1 = Post.objects.create(title=title, price=price, summary=summary, content=content, media=media, is_vip=is_vip, channel_id=channel_id, user_id=user_id)
+                p1 = Post.objects.create(title=title, price=price, summary=summary, content=content, is_vip=is_vip, channel=channel, user=user)
                 Post.save(p1)
                 return redirect('post_created')
             else:
