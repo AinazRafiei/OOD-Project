@@ -2,25 +2,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>{% block title %}My amazing site{% endblock %}</title>
+{% load static %}
+  <!-- bootstrap core css -->
+
+  {% load bootstrap5 %}
+  {% bootstrap_css %}
+  {% bootstrap_javascript %}
+  <!-- Custom styles for this template -->
+  <link href="{%  static 'css/style.css' %}" rel="stylesheet" />
+<!-- Font Awesome -->
+<link
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+  rel="stylesheet"
+/>
+<!-- Google Fonts -->
+<link
+  href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+  rel="stylesheet"
+/>
+
+
+<header class="header_section">
+      <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg custom_nav-container d-block">
+          <div class="main_nav_menu">
+            <div class="fk_width">
+              <div class="custom_menu-btn">
+                <button onclick="openNav()">
+                  <span class="s-1"> </span>
+                  <span class="s-2"> </span>
+                  <span class="s-3"> </span>
+                </button>
+              </div>
+              <div id="myNav" class="overlay">
+                <div class="overlay-content">
+                  <a class="" href="index.html">Home <span class="sr-only">(current)</span></a>
+                  <a class="" href="about.html">About </a>
+                  <a class="" href="gallery.html">Gallery </a>
+                  <a class="" href="blog.html">Blog </a>
+                  <a class="" href="testimonial.html">Testimonial </a>
+                </div>
+              </div>
+            </div>
+            <a class="navbar-brand" href="index.html">
+              <span>
+                {% block title %}My amazing site{% endblock %}
+              </span>
+            </a>
+            <div class="user_option">
+
+        {% block sidebar %}
+            <a href="/home/">Home</a>
+            {% if username %}
+            <a href="/logout/">Logout</a>
+            <a href="/create_channel/">Create Channel</a>
+            {% else %}
+            <a href="/signup/">Sign Up</a>
+            <a href="/login/">Login</a>
+            {% endif %}
+        {% endblock %}
+            </div>
+          </div>
+        </nav>
+      </div>
+    </header>
+
 </head>
 
 <body>
-    <div id="sidebar">
-        {% block sidebar %}
-        <ul>
-            <li><a href="/home/">Home</a></li>
-            {% if username %}
-            <li><a href="/logout/">Logout</a></li>
-            {% else %}
-            <li><a href="/signup/">Sign Up</a></li>
-            <li><a href="/login/">Login</a></li>
-            {% endif %}
-        </ul>
-        {% endblock %}
-    </div>
-
-    <div id="content">
+    <div id="content" class="container py-5" >
         {% block content %}{% endblock %}
     </div>
 </body>

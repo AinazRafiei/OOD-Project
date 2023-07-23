@@ -1,16 +1,14 @@
 from django import forms
+
 from .models import Channel, Post, Media
 
 
-
-class ChannelForm(forms.ModelForm):
+class ChannelForm(forms.Form):
+    name = forms.CharField()
     class Meta:
         model = Channel
-        fields = ['name']
 
 
-from django import forms
-from .models import Post, Media
 
 class PostForm(forms.ModelForm):
     media_file = forms.FileField(required=False)
@@ -28,7 +26,6 @@ class PostForm(forms.ModelForm):
         summary = cleaned_data.get('summary')
         content = cleaned_data.get('content')
         media = cleaned_data.get('media')
-
         if is_vip:
             if not all([price, title, summary]):
                 raise forms.ValidationError("Title, summary, and price are required for VIP posts.")
@@ -45,17 +42,3 @@ class PostForm(forms.ModelForm):
 
         return cleaned_data
 
-    def save(self, commit=True):
-        media_file = self.cleaned_data.get('media_file')
-        media = self.cleaned_data.get('media')
-
-        if media_file and not media:
-            media = Media.objects.create(
-                size=self.cleaned_data['size'],
-                format=self.cleaned_data['format'],
-                type=self.cleaned_data['type'],
-                duration=self.cleaned_data['duration']
-            )
-            self.instance.media = media
-
-        return super().save(commit=commit)
