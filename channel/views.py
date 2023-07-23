@@ -1,7 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, HttpResponse
 from django.views import View
-
 from .forms import ChannelForm, PostForm
+from .models import Channel, Post
+from userauth.utils import get_user
+from django.urls import reverse_lazy
+
 
 
 # Create your views here.
@@ -11,19 +14,37 @@ def create_channel(request):
     if request.method == 'POST':
         form = ChannelForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('channel_created')
+            channel_name = form.data['name']
+            user = get_user(request)
+            ch1 = Channel.objects.create(name=channel_name, owner=user)
+            Channel.save(ch1)
+            return redirect(reverse_lazy('home'))
     else:
         form = ChannelForm()
     return render(request, 'html/create_channel.html', {'form': form})
 
 
-def create_post(request):
+def create_post(request, channel_id):
     if request.method == 'POST':
         form = PostForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            return redirect('post_created')
+            price = form.data['price']
+            title = form.data['title']
+            summary = form.data['summary']
+            content = form.data['content']
+            if form.data['is_vip'] is 'on':
+                is_vip = True
+            else:
+                is_vip = False
+            channel = Channel.objects.get(id=channel_id)
+            user = get_user(request)
+            # membership = Membership.objects.get(user=user, channel=channel)
+            if channel.owner == user:
+                p1 = Post.objects.create(title=title, price=price, summary=summary, content=content, is_vip=is_vip, channel=channel, user=user)
+                Post.save(p1)
+                return redirect(reverse_lazy('home'))
+            else:
+                return HttpResponse("you don't have permission")
     else:
         form = PostForm()
     return render(request, 'html/create_post.html', {'form': form})

@@ -1,5 +1,5 @@
 from django.db import models
-
+from datetime import datetime
 from userauth.models import User
 
 
@@ -19,7 +19,7 @@ class Membership(models.Model):
 
 class Channel(models.Model):
     name = models.CharField(max_length=64)
-    owner_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     members = models.ManyToManyField(User, through=Membership, related_name="followings")
 
 
@@ -36,5 +36,7 @@ class Post(models.Model):
     summary = models.CharField(max_length=400, null=True)
     content = models.CharField(max_length=1000)
     media = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True)
-    channel_id = models.ForeignKey(Channel, on_delete=models.CASCADE)
+    published_at = models.DateTimeField(default=datetime.utcnow())
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     is_vip = models.BooleanField(default=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
