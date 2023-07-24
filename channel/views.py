@@ -1,3 +1,4 @@
+
 from django.shortcuts import render, redirect, HttpResponse
 from django.views import View
 from .forms import ChannelForm, PostForm
@@ -6,8 +7,17 @@ from userauth.utils import get_user
 from django.urls import reverse_lazy
 from userauth.models import User
 
+from django.shortcuts import HttpResponse
+from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
+from django.views import View
+from rest_framework.exceptions import NotFound
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-# Create your views here.
+from userauth.utils import get_user
+from .forms import ChannelForm, PostForm
+from .models import Post, Membership, Channel
 
 
 def create_channel(request):
@@ -18,7 +28,7 @@ def create_channel(request):
             user = get_user(request)
             ch1 = Channel.objects.create(name=channel_name, owner=user)
             Channel.save(ch1)
-            return redirect(reverse_lazy('home'))
+            return redirect(reverse_lazy('channels'))
     else:
         form = ChannelForm()
     return render(request, 'html/create_channel.html', {'form': form})
@@ -39,7 +49,7 @@ def create_post(request, channel_id):
             title = form.data['title']
             summary = form.data['summary']
             content = form.data['content']
-            if form.data['is_vip'] is 'on':
+            if form.data['is_vip'] == 'on':
                 is_vip = True
             else:
                 is_vip = False
@@ -50,7 +60,7 @@ def create_post(request, channel_id):
                 p1 = Post.objects.create(title=title, price=price, summary=summary, content=content, is_vip=is_vip,
                                          channel=channel, user=user)
                 Post.save(p1)
-                return redirect(reverse_lazy('home'))
+                return redirect(reverse_lazy('channels'))
             else:
                 return HttpResponse("you don't have permission")
     else:
@@ -58,6 +68,65 @@ def create_post(request, channel_id):
     return render(request, 'html/create_post.html', {'form': form})
 
 
-class ChannelPostViews(View):
+def represent_post(post, role):
+    if role in [Membership.Role.Owner, Membership.Role.Admin, Membership.Role.Vip]:
+        return post.represent_full()
+    else:
+        return post.represent_summary()
+
+
+def get_role(channel, user):
+    if channel.owner_id == user.id:
+        return Membership.Role.Owner
+    try:
+        member = Membership.objects.get(user_id=user.id, channel_id=channel.id)
+    except Membership.DoesNotExist:
+        return None
+    return member.role
+
+
+class ChannelDetailView(APIView):
     def get(self, request, channel_id, *args, **kwargs):
-        pass
+        user = get_user(request)
+        posts = Post.objects.filter(channel_id=channel_id).order_by('published_at')
+        try:
+            channel = Channel.objects.get(id=channel_id)
+        except Channel.DoesNotExist:
+            raise NotFound
+        role = get_role(channel, user)
+        return Response(data=dict(role=role.value if role else '', posts=[represent_post(post, role) for post in posts]))
+
+
+class AllChannelsView(View):
+    def get_channel_data(self, channel):
+        post = Post.objects.filter(channel_id=channel.id).order_by('-published_at').first()
+        summary = ''
+        published_at = None
+        if post:
+            summary = post.represent_summary()[1][:16]
+            published_at = post.published_at
+        return channel.id, channel.name, summary, published_at.date() if published_at else ''
+
+    def get(self, request, *args, **kwargs):
+        user = get_user(request)
+        if user is None:
+            return redirect(reverse_lazy('login'))
+        channels = list()
+        user_channels = Channel.objects.filter(owner=user)
+        user_followings = Channel.objects.filter(id__in=Membership.objects.filter(user=user).values_list("channel_id"))
+
+        def compare_datatime(x, y):
+            if y[3] is None:
+                return True
+            if x[3] is None:
+                return False
+            return x[3] > y[3]
+
+        # channels.extend(sorted([self.get_channel_data(channel) for channel in user_channels], key=lambda x: x[3]))
+        # channels.extend(sorted([self.get_channel_data(channel) for channel in user_followings], key=lambda x: x[3]))
+        # channels = sorted(
+        #     filter(lambda x: x[3] is not None, [self.get_channel_data(channel) for channel in Channel.objects.all()]),
+        #     key=lambda x: x[3])
+        channels = [self.get_channel_data(channel) for channel in Channel.objects.all()]
+        print(len(channels))
+        return render(request, 'html/home.html', {"channels": channels, "username": user.username})

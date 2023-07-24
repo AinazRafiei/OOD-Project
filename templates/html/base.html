@@ -26,24 +26,6 @@
       <div class="container-fluid">
         <nav class="navbar navbar-expand-lg custom_nav-container d-block">
           <div class="main_nav_menu">
-            <div class="fk_width">
-              <div class="custom_menu-btn">
-                <button onclick="openNav()">
-                  <span class="s-1"> </span>
-                  <span class="s-2"> </span>
-                  <span class="s-3"> </span>
-                </button>
-              </div>
-              <div id="myNav" class="overlay">
-                <div class="overlay-content">
-                  <a class="" href="index.html">Home <span class="sr-only">(current)</span></a>
-                  <a class="" href="about.html">About </a>
-                  <a class="" href="gallery.html">Gallery </a>
-                  <a class="" href="blog.html">Blog </a>
-                  <a class="" href="testimonial.html">Testimonial </a>
-                </div>
-              </div>
-            </div>
             <a class="navbar-brand" href="index.html">
               <span>
                 {% block title %}My amazing site{% endblock %}
@@ -52,7 +34,7 @@
             <div class="user_option">
 
         {% block sidebar %}
-            <a href="/home/">Home</a>
+            <a href="/channels/">Home</a>
             {% if username %}
             <a href="/logout/">Logout</a>
             <a href="/create_channel/">Create Channel</a>

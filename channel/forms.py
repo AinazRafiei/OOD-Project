@@ -9,6 +9,7 @@ class ChannelForm(forms.Form):
     class Meta:
         model = Channel
 
+
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
@@ -48,5 +49,3 @@ class PostForm(forms.ModelForm):
             raise forms.ValidationError("Content field is required.")
 
         return cleaned_data
-
-

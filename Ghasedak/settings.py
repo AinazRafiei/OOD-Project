@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'userauth',
     'bootstrap5',
     'channel',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
