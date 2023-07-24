@@ -1,12 +1,3 @@
-
-from django.shortcuts import render, redirect, HttpResponse
-from django.views import View
-from .forms import ChannelForm, PostForm
-from .models import Channel, Post, Membership
-from userauth.utils import get_user
-from django.urls import reverse_lazy
-from userauth.models import User
-
 from django.shortcuts import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
@@ -15,6 +6,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from userauth.models import User
 from userauth.utils import get_user
 from .forms import ChannelForm, PostForm
 from .models import Post, Membership, Channel
@@ -36,9 +28,14 @@ def create_channel(request):
 
 def show_members(request, channel_id):
     if request.method == 'GET':
+        try:
+            channel = Channel.objects.get(id=channel_id)
+        except Channel.DoesNotExist:
+            return HttpResponse(status=404)
         members = list(Membership.objects.filter(channel_id=channel_id).values())
         usernames = [User.objects.get(id=i['user_id']).username for i in members]
-    return render(request, 'html/show_members.html', {'usernames': usernames})
+        return render(request, 'html/show_members.html', {'usernames': usernames, 'channel_name': channel.name})
+    return HttpResponse(status=400)
 
 
 def create_post(request, channel_id):
@@ -69,7 +66,7 @@ def create_post(request, channel_id):
 
 
 def represent_post(post, role):
-    if role in [Membership.Role.Owner, Membership.Role.Admin, Membership.Role.Vip]:
+    if role in [Membership.Role.Owner.value, Membership.Role.Admin.value, Membership.Role.Vip.value]:
         return post.represent_full()
     else:
         return post.represent_summary()
@@ -77,12 +74,34 @@ def represent_post(post, role):
 
 def get_role(channel, user):
     if channel.owner_id == user.id:
-        return Membership.Role.Owner
+        return Membership.Role.Owner.value
     try:
         member = Membership.objects.get(user_id=user.id, channel_id=channel.id)
     except Membership.DoesNotExist:
-        return None
+        return ''
     return member.role
+
+
+class ChannelJoinView(APIView):
+    def post(self, request, channel_id, *args, **kwargs):
+        user = get_user(request)
+        try:
+            channel = Channel.objects.get(id=channel_id)
+        except Channel.DoesNotExist:
+            raise NotFound
+        channel.members.add(user)
+        return Response()
+
+
+class ChannelLeaveView(APIView):
+    def post(self, request, channel_id, *args, **kwargs):
+        user = get_user(request)
+        try:
+            channel = Channel.objects.get(id=channel_id)
+        except Channel.DoesNotExist:
+            raise NotFound
+        channel.members.remove(user)
+        return Response()
 
 
 class ChannelDetailView(APIView):
@@ -94,7 +113,8 @@ class ChannelDetailView(APIView):
         except Channel.DoesNotExist:
             raise NotFound
         role = get_role(channel, user)
-        return Response(data=dict(role=role.value if role else '', posts=[represent_post(post, role) for post in posts]))
+        return Response(
+            data=dict(role=role, posts=[represent_post(post, role) for post in posts]))
 
 
 class AllChannelsView(View):

@@ -97,7 +97,7 @@
             base_button.style.margin = "0 0 0 2%"
 
             var members = base_button.cloneNode(false);
-            members.setAttribute("href", "#")
+            members.setAttribute("href", channel_id + "/members")
             members.innerHTML = 'Members <i class="fas fa-search"></i>'
 
             var manage = base_button.cloneNode(false);
@@ -113,11 +113,31 @@
             premium.innerHTML = 'Premium <i class="fa-solid fa-star"></i>'
 
             var leave = base_button.cloneNode(false);
-            leave.setAttribute("href", "#")
+            leave.onclick = function () {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', channel_id + '/leave');
+                xhr.timeout = 1000;
+                xhr.send();
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        getChannelDetail(channel_id);
+                    }
+                }
+            }
             leave.innerHTML = 'Leave <i class="fa-solid fa-arrow-right-from-bracket"></i>'
 
             var join = base_button.cloneNode(false);
-            join.setAttribute("href", "#")
+            join.onclick = function () {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', channel_id + '/join');
+                xhr.timeout = 1000;
+                xhr.send();
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        getChannelDetail(channel_id);
+                    }
+                }
+            }
             join.innerHTML = 'Join <i class="fa-solid fa-arrow-right-to-bracket"></i>'
 
             var chosen_buttons;

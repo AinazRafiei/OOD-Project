@@ -1,5 +1,6 @@
 {% extends 'html/base.html' %}
 
+{% block title %} {{ channel_name }} Members {% endblock title %}
 {% block content %}
     {% for username in usernames %}
         <li>{{ username }}</li>

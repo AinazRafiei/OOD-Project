@@ -31,9 +31,9 @@ class Media(models.Model):
 
 
 class Post(models.Model):
-    price = models.IntegerField(null=True)
-    title = models.CharField(max_length=200, null=True)
-    summary = models.CharField(max_length=400, null=True)
+    price = models.IntegerField(null=True, blank=True)
+    title = models.CharField(max_length=200, null=True, blank=True)
+    summary = models.CharField(max_length=400, null=True, blank=True)
     content = models.CharField(max_length=1000)
     media = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True)
     published_at = models.DateTimeField(auto_now_add=True)
