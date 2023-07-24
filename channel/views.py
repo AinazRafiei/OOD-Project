@@ -7,7 +7,6 @@ from django.urls import reverse_lazy
 from userauth.models import User
 
 
-
 # Create your views here.
 
 
@@ -48,7 +47,8 @@ def create_post(request, channel_id):
             user = get_user(request)
             # membership = Membership.objects.get(user=user, channel=channel)
             if channel.owner == user:
-                p1 = Post.objects.create(title=title, price=price, summary=summary, content=content, is_vip=is_vip, channel=channel, user=user)
+                p1 = Post.objects.create(title=title, price=price, summary=summary, content=content, is_vip=is_vip,
+                                         channel=channel, user=user)
                 Post.save(p1)
                 return redirect(reverse_lazy('home'))
             else:
