@@ -22,6 +22,13 @@ class PostForm(forms.ModelForm):
             'content': forms.Textarea,
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set required=False for price, title, summary fields
+        self.fields['price'].required = False
+        self.fields['title'].required = False
+        self.fields['summary'].required = False
+
     def clean(self):
         cleaned_data = super().clean()
         is_vip = cleaned_data.get('is_vip')
@@ -29,9 +36,14 @@ class PostForm(forms.ModelForm):
         title = cleaned_data.get('title')
         summary = cleaned_data.get('summary')
         content = cleaned_data.get('content')
+
         if is_vip:
-            if not all([price, title, summary]):
-                raise forms.ValidationError("Title, summary, and price are required for VIP posts.")
+            if not price:
+                raise forms.ValidationError("Price field for vip post is required.")
+            if not title:
+                raise forms.ValidationError("Title field for vip post is required.")
+            if not summary:
+                raise forms.ValidationError("Summary field for vip post is required.")
 
         if not content:
             raise forms.ValidationError("Content field is required.")

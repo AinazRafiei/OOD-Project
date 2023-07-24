@@ -21,6 +21,7 @@ from django.urls import path
 
 from channel.views import create_post, create_channel, ChannelDetailView, AllChannelsView
 from userauth.views import SignUpView, LoginView, LogoutView, Home
+from channel.views import create_post, create_channel, show_members
 
 urlpatterns = [
                   path('admin/', admin.site.urls),
@@ -30,6 +31,7 @@ urlpatterns = [
                   path('channels/', AllChannelsView.as_view(), name='channels'),
                   path('channels/<int:channel_id>/detail', ChannelDetailView.as_view(), name='channel_details'),
                   path('create_channel/', create_channel, name='create_channel'),
+                  path('channel/members/<int:channel_id>/', show_members, name='show_members'),
                   path('channels/<int:channel_id>/post', create_post, name='create_post'),
 
               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
