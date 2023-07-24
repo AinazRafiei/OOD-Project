@@ -1,5 +1,4 @@
 from django.db import models
-from datetime import datetime
 from userauth.models import User
 
 
@@ -8,6 +7,7 @@ from userauth.models import User
 
 class Membership(models.Model):
     class Role(models.Choices):
+        Owner = 'owner'
         Admin = 'admin'
         Normal = 'normal'
         Vip = 'vip'
@@ -36,7 +36,15 @@ class Post(models.Model):
     summary = models.CharField(max_length=400, null=True)
     content = models.CharField(max_length=1000)
     media = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True)
-    published_at = models.DateTimeField(default=datetime.utcnow())
+    published_at = models.DateTimeField(auto_now_add=True)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     is_vip = models.BooleanField(default=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def represent_full(self):
+        return [self.title, self.content, False, self.published_at.strftime("%B %d, %Y | %H:%M")]
+
+    def represent_summary(self):
+        if self.is_vip:
+            return [self.title, self.summary, True, self.published_at.strftime("%B %d, %Y | %H:%M")]
+        return self.represent_full()

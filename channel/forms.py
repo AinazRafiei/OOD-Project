@@ -5,13 +5,12 @@ from .models import Channel, Post
 
 class ChannelForm(forms.Form):
     name = forms.CharField()
+
     class Meta:
         model = Channel
 
 
-
 class PostForm(forms.ModelForm):
-
     class Meta:
         model = Post
         fields = ['is_vip', 'price', 'title', 'summary', 'content']
@@ -38,4 +37,3 @@ class PostForm(forms.ModelForm):
             raise forms.ValidationError("Content field is required.")
 
         return cleaned_data
-

@@ -19,16 +19,17 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
 
+from channel.views import create_post, create_channel, ChannelDetailView, AllChannelsView
 from userauth.views import SignUpView, LoginView, LogoutView, Home
-from channel.views import create_post, create_channel
 
 urlpatterns = [
                   path('admin/', admin.site.urls),
                   path('signup/', SignUpView.as_view(), name='signup'),
                   path('login/', LoginView.as_view(), name='login'),
                   path('logout/', LogoutView.as_view(), name='logout'),
-                  path('home/', Home.as_view(), name='home'),
+                  path('channels/', AllChannelsView.as_view(), name='channels'),
+                  path('channels/<int:channel_id>/detail', ChannelDetailView.as_view(), name='channel_details'),
                   path('create_channel/', create_channel, name='create_channel'),
-                  path('create_post/<int:channel_id>/', create_post, name='create_post'),
+                  path('channels/<int:channel_id>/post', create_post, name='create_post'),
 
               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
