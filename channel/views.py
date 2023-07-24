@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect, HttpResponse
 from django.views import View
 from .forms import ChannelForm, PostForm
-from .models import Channel, Post
+from .models import Channel, Post, Membership
 from userauth.utils import get_user
 from django.urls import reverse_lazy
+from userauth.models import User
 
 
 
@@ -22,6 +23,13 @@ def create_channel(request):
     else:
         form = ChannelForm()
     return render(request, 'html/create_channel.html', {'form': form})
+
+
+def show_members(request, channel_id):
+    if request.method == 'GET':
+        members = list(Membership.objects.filter(channel_id=channel_id).values())
+        usernames = [User.objects.get(id=i['user_id']).username for i in members]
+    return render(request, 'html/show_members.html', {'usernames': usernames})
 
 
 def create_post(request, channel_id):

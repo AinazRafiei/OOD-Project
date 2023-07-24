@@ -20,7 +20,7 @@ from django.contrib import admin
 from django.urls import path
 
 from userauth.views import SignUpView, LoginView, LogoutView, Home
-from channel.views import create_post, create_channel
+from channel.views import create_post, create_channel, show_members
 
 urlpatterns = [
                   path('admin/', admin.site.urls),
@@ -30,5 +30,5 @@ urlpatterns = [
                   path('home/', Home.as_view(), name='home'),
                   path('create_channel/', create_channel, name='create_channel'),
                   path('create_post/<int:channel_id>/', create_post, name='create_post'),
-
+                  path('channel/members/<int:channel_id>/', show_members, name='show_members'),
               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
