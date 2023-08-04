@@ -100,9 +100,9 @@
             members.setAttribute("href", channel_id + "/members")
             members.innerHTML = 'Members <i class="fas fa-search"></i>'
 
-            var manage = base_button.cloneNode(false);
-            manage.setAttribute("href", "#")
-            manage.innerHTML = 'Manage <i class="fa-solid fa-gear"></i>'
+            var admins = base_button.cloneNode(false);
+            admins.setAttribute("href", channel_id + "/admins")
+            admins.innerHTML = 'Admins <i class="fa-solid fa-gear"></i>'
 
             var post = base_button.cloneNode(false);
             post.setAttribute("href", channel_id + "/post")
@@ -142,7 +142,7 @@
 
             var chosen_buttons;
             if (role === 'owner') {
-                chosen_buttons = [members, manage, post]
+                chosen_buttons = [members, admins, post]
             } else if (role === 'admin') {
                 chosen_buttons = [post, leave]
             } else if (role === 'vip') {

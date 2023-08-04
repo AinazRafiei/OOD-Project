@@ -1,0 +1,95 @@
+{% extends "html/base.html" %}
+
+{% block title %} {{ channel_name }} Admins {% endblock title %}
+{% block content %}
+    <form method="post" enctype="multipart/form-data" id="">
+        {% csrf_token %}
+        <fieldset class="module aligned">
+            <h2>
+                Admins:
+            </h2>
+            <div id="admins">
+                <div class="form-row">
+                    <label style="width: 15%;">{{ username }} : </label><input type="hidden" name="userid"
+                                                                               value="{{ userid }}"><input
+                        type="number" name="{{ userid }}" value="{{ usershare }}" style="width: 15%;">
+                </div>
+            </div>
+            <div class="form-row inputs" style="padding-top: 30px;">
+                <select id="member-select" class="form-select form-select-lg mb-3"
+                        style="width: 30%; display: inline-block;">
+                </select>
+                <i class="fa-solid fa-plus fa-xl" onclick="add()" style="padding: 1%;color: green"></i>
+            </div>
+        </fieldset>
+        <div class="submit-row">
+            <button>Save</button>
+        </div>
+    </form>
+    <script>
+        var select_member = document.getElementById("member-select")
+        {% for id, name in members %}
+            var tempOption = document.createElement('option');
+            tempOption.innerText = "{{ name }}";
+            tempOption.value = "{{ id }}";
+            select_member.appendChild(tempOption)
+        {% endfor %}
+        {% for id, admin, share in admins %}
+            add_field("{{ id }}", "{{ admin }}", {{ share }});
+        {% endfor %}
+
+        function add() {
+            var selected_option = select_member.children[select_member.selectedIndex];
+            var name = selected_option.innerText;
+            var id = selected_option.value;
+            add_field(id, name, 0);
+            selected_option.remove()
+        }
+
+        function add_field(user_id, name, share) {
+
+            var form_row = document.createElement('div');
+            form_row.setAttribute("class", "form-row");
+
+            var lable = document.createElement('label');
+            lable.innerText = name + " : ";
+            lable.style.width = "15%";
+
+            var user_id_input = document.createElement('input')
+            user_id_input.setAttribute("type", "hidden");
+            user_id_input.setAttribute("name", "userid");
+            user_id_input.setAttribute("value", user_id);
+
+            var name_input = document.createElement('input')
+            name_input.setAttribute("type", "hidden");
+            name_input.setAttribute("name", "username");
+            name_input.setAttribute("value", name);
+
+            var share_input = document.createElement('input')
+            share_input.setAttribute("type", "number");
+            share_input.setAttribute("name", user_id);
+            share_input.setAttribute("value", share);
+            share_input.style.width = "15%";
+
+            var remove_button = document.createElement('i')
+            remove_button.setAttribute("class", "fa-solid fa-xmark fa-xl");
+            remove_button.style.padding = "1.4%";
+            remove_button.style.color = "red";
+            remove_button.onclick = function () {
+                var tempOption = document.createElement('option');
+                tempOption.innerText = this.parentElement.children[2].getAttribute("value");
+                tempOption.value = this.parentElement.children[1].getAttribute("value");
+                select_member.appendChild(tempOption);
+                this.parentElement.remove();
+            }
+
+            form_row.appendChild(lable);
+            form_row.appendChild(user_id_input);
+            form_row.appendChild(name_input);
+            form_row.appendChild(share_input);
+            form_row.appendChild(remove_button);
+
+            document.getElementById('admins').appendChild(form_row)
+        }
+    </script>
+{% endblock %}

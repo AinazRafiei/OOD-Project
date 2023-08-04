@@ -12,18 +12,18 @@ def get_user_id(request):
         try:
             payload = jwt_decode(session_hash)
             if payload["expires"] > time.time():
-                return payload["id"]
+                return payload["username"]
         except:
             pass
     return None
 
 
 def get_user(request):
-    userid = get_user_id(request)
-    if not userid:
+    username = get_user_id(request)
+    if not username:
         return None
     try:
-        user = User.objects.get(id=userid)
+        user = User.objects.get(username=username)
     except User.DoesNotExist():
         return None
     return user

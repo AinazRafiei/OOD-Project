@@ -1,4 +1,5 @@
 from django.db import models
+
 from userauth.models import User
 
 
@@ -21,6 +22,12 @@ class Channel(models.Model):
     name = models.CharField(max_length=64)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     members = models.ManyToManyField(User, through=Membership, related_name="followings")
+
+
+class Share(models.Model):
+    amount = models.IntegerField()
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
 
 
 class Media(models.Model):

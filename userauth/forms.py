@@ -13,13 +13,13 @@ phone_regex = re.compile(r'\+?[0-9]*')
 
 
 class SignUpForm(ModelForm):
-    username = forms.CharField(max_length=32, label="Nickname")
     identifier = forms.CharField(max_length=32, label="Email or Phone number")
     password = forms.CharField(max_length=254, widget=forms.PasswordInput())
 
     class Meta:
         model = User
         fields = [
+            'nickname',
             'username',
             'email',
             'phone_number',
@@ -30,7 +30,7 @@ class SignUpForm(ModelForm):
             'phone_number': forms.HiddenInput,
         }
 
-    field_order = ['username', 'identifier', 'password']
+    field_order = ['nickname', 'username', 'identifier', 'password']
 
     def clean(self):
         identifier = self.cleaned_data['identifier']

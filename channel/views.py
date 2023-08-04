@@ -2,14 +2,14 @@ from django.shortcuts import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views import View
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from userauth.models import User
 from userauth.utils import get_user
 from .forms import ChannelForm, PostForm
-from .models import Post, Membership, Channel
+from .models import Post, Membership, Channel, Share
 
 
 def create_channel(request):
@@ -34,7 +34,9 @@ def show_members(request, channel_id):
             return HttpResponse(status=404)
         members = list(Membership.objects.filter(channel_id=channel_id).values())
         usernames = [User.objects.get(id=i['user_id']).username for i in members]
-        return render(request, 'html/show_members.html', {'usernames': usernames, 'channel_name': channel.name})
+        user = get_user(request)
+        return render(request, 'html/members.html',
+                      {'usernames': usernames, 'channel_name': channel.name, "username": user.username})
     return HttpResponse(status=400)
 
 
@@ -115,6 +117,57 @@ class ChannelDetailView(APIView):
         role = get_role(channel, user)
         return Response(
             data=dict(role=role, posts=[represent_post(post, role) for post in posts]))
+
+
+class ChannelAdminsView(APIView):
+    def get(self, request, channel_id, *args, **kwargs):
+        user = get_user(request)
+        try:
+            channel = Channel.objects.get(id=channel_id)
+        except Channel.DoesNotExist:
+            raise NotFound
+        if user != channel.owner:
+            raise PermissionDenied
+        admins = list()
+        members = list()
+        for member in Membership.objects.filter(channel_id=channel.id):
+            if member.role == Membership.Role.Admin.value:
+                try:
+                    share = Share.objects.get(owner_id=member.user_id, channel_id=channel.id).amount
+                except Share.DoesNotExist:
+                    share = 0
+                admins.append((member.user_id, member.user.username, share))
+            else:
+                members.append((member.user_id, member.user.username))
+        try:
+            share = Share.objects.get(owner_id=user.id, channel_id=channel.id).amount
+        except Share.DoesNotExist:
+            share = 0
+        return render(request, 'html/admins.html',
+                      {"admins": admins, "members": members, "channel_name": channel.name, "username": user.username,
+                       "userid": user.id, "usershare": share})
+
+    def post(self, request, channel_id, *args, **kwargs):
+        user = get_user(request)
+        try:
+            channel = Channel.objects.get(id=channel_id)
+        except Channel.DoesNotExist:
+            raise NotFound
+        if user != channel.owner:
+            raise PermissionDenied
+        userids = dict(request.POST).get('userid')
+        for admin in Membership.objects.filter(role=Membership.Role.Admin):
+            if admin.user_id not in userids:
+                admin.role = Membership.Role.Normal
+                admin.save()
+        for member in Membership.objects.filter(user_id__in=userids):
+            if member.role != Membership.Role.Admin.value:
+                member.role = Membership.Role.Admin
+                member.save()
+        Share.objects.filter(channel_id=channel.id).delete()
+        for userid in userids:
+            Share.objects.create(channel_id=channel.id, owner_id=userid, amount=request.POST.get(userid))
+        return self.get(request, channel_id, *args, **kwargs)
 
 
 class AllChannelsView(View):
