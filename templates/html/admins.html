@@ -5,9 +5,7 @@
     <form method="post" enctype="multipart/form-data" id="">
         {% csrf_token %}
         <fieldset class="module aligned">
-            <h2>
-                Admins:
-            </h2>
+            <label style="width: 15%; font-size: 24px;">Admin</label><label style="width: 15%; font-size: 24px;">Share</label>
             <div id="admins">
                 <div class="form-row">
                     <label style="width: 15%;">{{ username }} : </label><input type="hidden" name="userid"
