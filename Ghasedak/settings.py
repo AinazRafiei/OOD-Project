@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'bootstrap5',
     'channel',
     'rest_framework',
+    'transactions'
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,34 @@
+{% extends 'html/base.html' %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wallet</title>
+</head>
+<body>
+
+    {% block content %}
+    {% block p %} موجودی: {{ balance }}  ریال {% endblock p %}
+
+    <form method="post" action="{% url 'charge' %}">
+        {% csrf_token %}
+        {{ charge_form }}
+        <button type="submit">شارژ</button>
+    </form>
+
+    <form method="post" action="{% url 'withdraw' %}">
+        {% csrf_token %}
+        {{ withdraw_form }}
+        <button type="submit">برداشت</button>
+    </form>
+
+    {% if request.GET.message == 'charge_success' %}
+        <p>عملیات شارژ با موفقیت انجام شد.</p>
+    {% elif request.GET.message == 'withdraw_success' %}
+        <p>عملیات برداشت با موفقیت انجام شد.</p>
+    {% elif request.GET.message == 'withdraw_faild' %}
+        <p>موجودی کافی نمی باشد.</p>
+    {% endif %}
+    {% endblock content %}
+</body>
+</html>

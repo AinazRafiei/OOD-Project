@@ -28,7 +28,7 @@
           <div class="main_nav_menu">
             <a class="navbar-brand" href="#">
               <span>
-                {% block title %}My amazing site{% endblock %}
+                {% block title %}Ghasedak{% endblock %}
               </span>
             </a>
             <div class="user_option">
@@ -38,6 +38,9 @@
             {% if username %}
             <a href="/logout/">Logout</a>
             <a href="/create_channel/">Create Channel</a>
+
+{#            user_id#}
+            <a href="/wallet/2">Wallet</a>
             {% else %}
             <a href="/signup/">Sign Up</a>
             <a href="/login/">Login</a>

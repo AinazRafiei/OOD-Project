@@ -19,9 +19,11 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
 
-from channel.views import ChannelDetailView, AllChannelsView, ChannelJoinView, \
-    ChannelLeaveView, ChannelAdminsView, create_post, create_channel, show_members, ChannelTariffsView
-from userauth.views import SignUpView, LoginView, LogoutView
+from channel.views import create_post, create_channel, ChannelDetailView, AllChannelsView, ChannelJoinView, \
+    ChannelLeaveView, ChannelAdminsView, ChannelTariffsView
+from transactions.views import UserBalanceAPIView, ChargeAPIView, WithdrawAPIView
+from userauth.views import SignUpView, LoginView, LogoutView, Home
+from channel.views import create_post, create_channel, show_members
 
 urlpatterns = [
                   path('admin/', admin.site.urls),
@@ -37,5 +39,8 @@ urlpatterns = [
                   path('channels/<int:channel_id>/post', create_post, name='create_post'),
                   path('channels/<int:channel_id>/join', ChannelJoinView.as_view(), name='create_post'),
                   path('channels/<int:channel_id>/leave', ChannelLeaveView.as_view(), name='create_post'),
+                  path('wallet/<int:user_id>/', UserBalanceAPIView.as_view(), name='wallet'),
+                  path('charge/', ChargeAPIView.as_view(), name='charge'),
+                  path('withdraw/', WithdrawAPIView.as_view(), name='withdraw'),
 
               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
