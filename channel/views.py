@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from userauth.models import User
 from userauth.utils import get_user
 from .forms import ChannelForm, PostForm
-from .models import Post, Membership, Channel, Share
+from .models import Post, Membership, Channel, Share, Tariff
 
 
 def create_channel(request):
@@ -167,6 +167,37 @@ class ChannelAdminsView(APIView):
         Share.objects.filter(channel_id=channel.id).delete()
         for userid in userids:
             Share.objects.create(channel_id=channel.id, owner_id=userid, amount=request.POST.get(userid))
+        return self.get(request, channel_id, *args, **kwargs)
+
+
+class ChannelTariffsView(APIView):
+    def get(self, request, channel_id, *args, **kwargs):
+        user = get_user(request)
+        try:
+            channel = Channel.objects.get(id=channel_id)
+        except Channel.DoesNotExist:
+            raise NotFound
+        if user != channel.owner:
+            raise PermissionDenied
+        tariffs = list()
+        for tariff in Tariff.objects.filter(channel_id=channel.id):
+            tariffs.append((tariff.get_duration_display(), tariff.duration, tariff.price))
+        choices = Tariff.DurationChoice.choices
+        return render(request, 'html/tariff.html',
+                      {"tariffs": tariffs, "choices": choices, "channel_name": channel.name, "username": user.username})
+
+    def post(self, request, channel_id, *args, **kwargs):
+        user = get_user(request)
+        try:
+            channel = Channel.objects.get(id=channel_id)
+        except Channel.DoesNotExist:
+            raise NotFound
+        if user != channel.owner:
+            raise PermissionDenied
+        durations = dict(request.POST).get('duration')
+        Tariff.objects.filter(channel_id=channel.id).delete()
+        for duration in durations:
+            Tariff.objects.create(channel_id=channel.id, duration=duration, price=request.POST.get(duration))
         return self.get(request, channel_id, *args, **kwargs)
 
 

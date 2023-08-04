@@ -7,7 +7,7 @@ from userauth.models import User
 
 
 class Membership(models.Model):
-    class Role(models.Choices):
+    class Role(models.TextChoices):
         Owner = 'owner'
         Admin = 'admin'
         Normal = 'normal'
@@ -22,6 +22,18 @@ class Channel(models.Model):
     name = models.CharField(max_length=64)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     members = models.ManyToManyField(User, through=Membership, related_name="followings")
+
+
+class Tariff(models.Model):
+    class DurationChoice(models.IntegerChoices):
+        Month = (30, 'Month')
+        ThreeMonths = (90, 'Three Months')
+        SixMonths = (180, 'Six Months')
+        Year = (365, 'One Year')
+
+    duration = models.IntegerField(choices=DurationChoice.choices)
+    price = models.IntegerField()
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
 
 
 class Share(models.Model):

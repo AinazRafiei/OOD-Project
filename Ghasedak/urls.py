@@ -20,7 +20,7 @@ from django.contrib import admin
 from django.urls import path
 
 from channel.views import ChannelDetailView, AllChannelsView, ChannelJoinView, \
-    ChannelLeaveView, ChannelAdminsView, create_post, create_channel, show_members
+    ChannelLeaveView, ChannelAdminsView, create_post, create_channel, show_members, ChannelTariffsView
 from userauth.views import SignUpView, LoginView, LogoutView
 
 urlpatterns = [
@@ -31,7 +31,8 @@ urlpatterns = [
                   path('channels/', AllChannelsView.as_view(), name='channels'),
                   path('create_channel/', create_channel, name='create_channel'),
                   path('channels/<int:channel_id>/detail', ChannelDetailView.as_view(), name='channel_details'),
-                  path('channels/<int:channel_id>/admins', ChannelAdminsView.as_view(), name='channel_manage'),
+                  path('channels/<int:channel_id>/admins', ChannelAdminsView.as_view(), name='channel_admins'),
+                  path('channels/<int:channel_id>/tariffs', ChannelTariffsView.as_view(), name='channel_tariffs'),
                   path('channels/<int:channel_id>/members', show_members, name='show_members'),
                   path('channels/<int:channel_id>/post', create_post, name='create_post'),
                   path('channels/<int:channel_id>/join', ChannelJoinView.as_view(), name='create_post'),

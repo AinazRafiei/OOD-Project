@@ -60,11 +60,6 @@
             user_id_input.setAttribute("name", "userid");
             user_id_input.setAttribute("value", user_id);
 
-            var name_input = document.createElement('input')
-            name_input.setAttribute("type", "hidden");
-            name_input.setAttribute("name", "username");
-            name_input.setAttribute("value", name);
-
             var share_input = document.createElement('input')
             share_input.setAttribute("type", "number");
             share_input.setAttribute("name", user_id);
@@ -77,8 +72,8 @@
             remove_button.style.color = "red";
             remove_button.onclick = function () {
                 var tempOption = document.createElement('option');
-                tempOption.innerText = this.parentElement.children[2].getAttribute("value");
-                tempOption.value = this.parentElement.children[1].getAttribute("value");
+                tempOption.innerText = name;
+                tempOption.value = user_id;
                 select_member.appendChild(tempOption);
                 this.parentElement.remove();
             }

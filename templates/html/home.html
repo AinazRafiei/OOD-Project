@@ -104,6 +104,10 @@
             admins.setAttribute("href", channel_id + "/admins")
             admins.innerHTML = 'Admins <i class="fa-solid fa-gear"></i>'
 
+            var tariffs = base_button.cloneNode(false);
+            tariffs.setAttribute("href", channel_id + "/tariffs")
+            tariffs.innerHTML = 'Tariffs <i class="fa-solid fa-gear"></i>'
+
             var post = base_button.cloneNode(false);
             post.setAttribute("href", channel_id + "/post")
             post.innerHTML = 'Post <i class="fas fa-paper-plane"></i>'
@@ -142,7 +146,7 @@
 
             var chosen_buttons;
             if (role === 'owner') {
-                chosen_buttons = [members, admins, post]
+                chosen_buttons = [members, admins, tariffs, post]
             } else if (role === 'admin') {
                 chosen_buttons = [post, leave]
             } else if (role === 'vip') {

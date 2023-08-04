@@ -1,0 +1,81 @@
+{% extends "html/base.html" %}
+
+{% block title %} {{ channel_name }} Tariff {% endblock title %}
+{% block content %}
+    <form method="post" enctype="multipart/form-data" id="">
+        {% csrf_token %}
+        <fieldset class="module aligned">
+            <div id="tariffs">
+            </div>
+            <div class="form-row inputs" style="padding-top: 30px;">
+                <select id="member-select" class="form-select form-select-lg mb-3"
+                        style="width: 30%; display: inline-block;">
+                </select>
+                <i class="fa-solid fa-plus fa-xl" onclick="add()" style="padding: 1%;color: green"></i>
+            </div>
+        </fieldset>
+        <div class="submit-row">
+            <button>Save</button>
+        </div>
+    </form>
+    <script>
+        var select_member = document.getElementById("member-select")
+        {% for value, text in choices %}
+            var tempOption = document.createElement('option');
+            tempOption.innerText = "{{ text }}";
+            tempOption.value = "{{ value }}";
+            select_member.appendChild(tempOption)
+        {% endfor %}
+        {% for duration_text, duration_value, price in tariffs %}
+            add_field("{{ duration_text }}", "{{ duration_value }}", {{ price }});
+        {% endfor %}
+
+        function add() {
+            var selected_option = select_member.children[select_member.selectedIndex];
+            var duration_text = selected_option.innerText;
+            var duration_value = selected_option.value;
+            add_field(duration_text, duration_value, 0);
+            {#selected_option.remove()#}
+        }
+
+        function add_field(duration_text, duration_value, price) {
+
+            var form_row = document.createElement('div');
+            form_row.setAttribute("class", "form-row");
+
+            var lable = document.createElement('label');
+            lable.innerText = duration_text + " : ";
+            lable.style.width = "15%";
+
+            var duration_input = document.createElement('input')
+            duration_input.setAttribute("type", "hidden");
+            duration_input.setAttribute("name", "duration");
+            duration_input.setAttribute("value", duration_value);
+
+            var price_input = document.createElement('input')
+            price_input.setAttribute("type", "number");
+            price_input.setAttribute("name", duration_value);
+            price_input.setAttribute("value", price);
+            price_input.style.width = "15%";
+
+            var remove_button = document.createElement('i')
+            remove_button.setAttribute("class", "fa-solid fa-xmark fa-xl");
+            remove_button.style.padding = "1.4%";
+            remove_button.style.color = "red";
+            remove_button.onclick = function () {
+                {#var tempOption = document.createElement('option');#}
+                {#tempOption.innerText = duration_text;#}
+                {#tempOption.value = duration_value;#}
+                {#select_member.appendChild(tempOption);#}
+                this.parentElement.remove();
+            }
+
+            form_row.appendChild(lable);
+            form_row.appendChild(duration_input);
+            form_row.appendChild(price_input);
+            form_row.appendChild(remove_button);
+
+            document.getElementById('tariffs').appendChild(form_row)
+        }
+    </script>
+{% endblock %}
