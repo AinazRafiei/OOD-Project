@@ -48,16 +48,19 @@ def create_post(request, channel_id):
             title = form.data['title']
             summary = form.data['summary']
             content = form.data['content']
-            if form.data['is_vip'] == 'on':
-                is_vip = True
-            else:
-                is_vip = False
             channel = Channel.objects.get(id=channel_id)
             user = get_user(request)
             # membership = Membership.objects.get(user=user, channel=channel)
             if channel.owner == user:
-                p1 = Post.objects.create(title=title, price=price, summary=summary, content=content, is_vip=is_vip,
-                                         channel=channel, user=user)
+                if 'is_vip' in form.data:
+                    is_vip = True
+                    p1 = Post.objects.create(title=title, price=price, summary=summary, content=content, is_vip=is_vip,
+                                             channel=channel, user=user)
+                else:
+                    is_vip = False
+                    p1 = Post.objects.create(title=title, content=content, is_vip=is_vip,
+                                             channel=channel, user=user)
+
                 Post.save(p1)
                 return redirect(reverse_lazy('channels'))
             else:
