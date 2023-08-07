@@ -1,6 +1,7 @@
 from django import forms
+from django.forms import ModelChoiceField
 
-from .models import Channel, Post
+from .models import Channel, Post, Tariff
 
 
 class ChannelForm(forms.Form):
@@ -40,3 +41,12 @@ class PostForm(forms.ModelForm):
                 raise forms.ValidationError("Summary field for vip post is required.")
 
         return cleaned_data
+
+
+class TariffFrom(forms.Form):
+    tariff = ModelChoiceField(queryset=Tariff.objects.all())
+
+    class Meta:
+        widget = {
+            'tariff': forms.Select(attrs={'class': 'form-select form-select-lg mb-3'})
+        }

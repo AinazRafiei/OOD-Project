@@ -1,15 +1,18 @@
+import datetime
+
 from django.shortcuts import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views import View
-from rest_framework.exceptions import NotFound, PermissionDenied
+from django.views.generic import FormView
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from userauth.models import User
 from userauth.utils import get_user
-from .forms import ChannelForm, PostForm
-from .models import Post, Membership, Channel, Share, Tariff
+from .forms import ChannelForm, PostForm, TariffFrom
+from .models import Post, Membership, Channel, Share, Tariff, Subscription
 
 
 def create_channel(request):
@@ -85,6 +88,27 @@ def get_role(channel, user):
     except Membership.DoesNotExist:
         return ''
     return member.role
+
+
+class SubscribeView(FormView):
+    form_class = TariffFrom
+    template_name = 'html/subscribe.html'
+
+    def post(self, request, channel_id, *args, **kwargs):
+        form = self.get_form()
+        user = get_user(request)
+        tariff = Tariff.objects.get(id=form.data['tariff'])
+        membership = Membership.objects.get(channel_id=channel_id, user=user)
+        if user.wallet.balance < tariff.price:
+            return ValidationError
+        user.wallet.balance -= tariff.price
+        user.wallet.save()
+        Subscription.objects.create(user=membership,
+                                    until_date=datetime.datetime.now() + datetime.timedelta(
+                                        days=tariff.duration))
+        membership.role = Membership.Role.Vip
+        membership.save()
+        return redirect(reverse_lazy('channels'))
 
 
 class ChannelJoinView(APIView):

@@ -35,6 +35,14 @@ class Tariff(models.Model):
     price = models.IntegerField()
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"{self.get_duration_display()} = {self.price}$"
+
+
+class Subscription(models.Model):
+    user = models.ForeignKey(Membership, on_delete=models.CASCADE)
+    until_date = models.DateTimeField()
+
 
 class Share(models.Model):
     amount = models.IntegerField()

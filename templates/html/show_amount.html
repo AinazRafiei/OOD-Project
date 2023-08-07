@@ -8,26 +8,26 @@
 <body>
 
     {% block content %}
-    {% block p %} موجودی: {{ balance }}  ریال {% endblock p %}
+    {% block p %} amount: {{ balance }} $ {% endblock p %}
 
     <form method="post" action="{% url 'charge' %}">
         {% csrf_token %}
         {{ charge_form }}
-        <button type="submit">شارژ</button>
+        <button type="submit">charge</button>
     </form>
 
     <form method="post" action="{% url 'withdraw' %}">
         {% csrf_token %}
         {{ withdraw_form }}
-        <button type="submit">برداشت</button>
+        <button type="submit">withdraw</button>
     </form>
 
     {% if request.GET.message == 'charge_success' %}
-        <p>عملیات شارژ با موفقیت انجام شد.</p>
+        <p>The charging operation was completed successfully.</p>
     {% elif request.GET.message == 'withdraw_success' %}
-        <p>عملیات برداشت با موفقیت انجام شد.</p>
+        <p>The withdrawal was successful.</p>
     {% elif request.GET.message == 'withdraw_faild' %}
-        <p>موجودی کافی نمی باشد.</p>
+        <p>Insufficient inventory!</p>
     {% endif %}
     {% endblock content %}
 </body>
