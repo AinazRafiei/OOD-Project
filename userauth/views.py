@@ -45,29 +45,16 @@ class JoinView(APIView):
         return Response()
 
 
-class Home(View):
-    def get_channel_data(self, channel):
-        post = Post.objects.filter(channel_id=channel.id).order_by('-published_at').first()
-        summary = None
-        published_at = None
-        if post:
-            summary = post.represent_summary()[1][:16]
-            published_at = post.published_at
-        return channel.id, channel.name, summary, published_at
-
+class NavbarView(APIView):
     def get(self, request, *args, **kwargs):
         user = get_user(request)
-        if user is None:
-            return redirect(reverse_lazy('login'))
-        channels = list()
-        user_channels = Channel.objects.filter(owner=user)
-        user_followings = Channel.objects.filter(id__in=Membership.objects.filter(user=user).values_list("channel_id"))
-
-        def compare_datatime(x, y):
-            if y[3] is None:
-                return True
-            if x[3] is None:
-                return False
-            return x[3] > y[3]
-
-        return render(request, 'html/h.html', {"username": user.username})
+        navbar = list()
+        navbar.append(("/channels/", "Home"))
+        if user:
+            navbar.append(("/create_channel/", "Create Channel"))
+            navbar.append(("/wallet/", "Wallet"))
+            navbar.append(("/logout/", "Logout"))
+        else:
+            navbar.append(("/login/", "Login"))
+            navbar.append(("/signup/", "Sign Up"))
+        return Response(data=dict(navbar=navbar))

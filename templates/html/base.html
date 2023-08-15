@@ -2,60 +2,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-{% load static %}
-  <!-- bootstrap core css -->
+    {% load static %}
+    <!-- bootstrap core css -->
 
-  {% load bootstrap5 %}
-  {% bootstrap_css %}
-  {% bootstrap_javascript %}
-  <!-- Custom styles for this template -->
-  <link href="{%  static 'css/style.css' %}" rel="stylesheet" />
-<!-- Font Awesome -->
-<link
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-  rel="stylesheet"
-/>
-<!-- Google Fonts -->
-<link
-  href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
-  rel="stylesheet"
-/>
+    {% load bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <!-- Custom styles for this template -->
+    <link href="{% static 'css/style.css' %}" rel="stylesheet"/>
+    <link href="{% static 'css/pp.css' %}" rel="stylesheet"/>
+    <!-- Font Awesome -->
+    <link
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+            rel="stylesheet"
+    />
+    <!-- Google Fonts -->
+    <link
+            href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+            rel="stylesheet"
+    />
 
 
-<header class="header_section">
-      <div class="container-fluid">
-        <nav class="navbar navbar-expand-lg custom_nav-container d-block">
-          <div class="main_nav_menu">
-            <a class="navbar-brand" href="#">
+    <header class="header_section">
+        <div class="container-fluid">
+            <nav class="navbar navbar-expand-lg custom_nav-container d-block">
+                <div class="main_nav_menu">
+                    <a class="navbar-brand" href="#">
               <span>
                 {% block title %}Ghasedak{% endblock %}
               </span>
-            </a>
-            <div class="user_option">
-
-        {% block sidebar %}
-            <a href="/channels/">Home</a>
-            {% if username %}
-            <a href="/logout/">Logout</a>
-            <a href="/create_channel/">Create Channel</a>
-
-            <a href="/wallet/">Wallet</a>
-            {% else %}
-            <a href="/signup/">Sign Up</a>
-            <a href="/login/">Login</a>
-            {% endif %}
-        {% endblock %}
-            </div>
-          </div>
-        </nav>
-      </div>
+                    </a>
+                    <div class="user_option" id="navbar">
+                    </div>
+                </div>
+            </nav>
+        </div>
     </header>
-
+    {% block style %}
+    {% endblock %}
 </head>
 
 <body>
-    <div id="content" class="container py-5" >
-        {% block content %}{% endblock %}
-    </div>
+
+<div id="content" class="container py-5">
+    {% block content %}{% endblock %}
+</div>
 </body>
+<script>
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/navbar');
+    xhr.timeout = 1000;
+    xhr.send();
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            var data = JSON.parse(this.responseText);
+            var navbar = data["navbar"];
+            let navbar_div = document.getElementById("navbar");
+            for (var i = 0; i < navbar.length; i++) {
+                var new_elm = document.createElement("a")
+                new_elm.setAttribute("href", navbar[i][0]);
+                new_elm.innerText = navbar[i][1];
+                navbar_div.appendChild(new_elm);
+            }
+        }
+    }
+</script>
 </html>

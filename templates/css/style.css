@@ -1154,3 +1154,37 @@ a, a:hover, a:focus {
 a {
     color: #fad932;
 }
+
+/*html{ background: linear-gradient(left, #99a, #eee, #99a); }*/
+
+/*.scroll {*/
+/*  height: 300px;*/
+/*  width: 40px;*/
+/*  overflow-y: scroll;*/
+/*  display: inline-block;*/
+
+/*.inner {*/
+/*  height: 300%;*/
+/*  width: 100%;*/
+/*  content: '.';*/
+/*}*/
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  border-radius: 10px;
+  background: rgba(255, 173, 7, 0.1);
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: rgba(255, 173, 7, 0.2);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 173, 7, 0.4);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgba(255, 173, 7, .9);
+}
+

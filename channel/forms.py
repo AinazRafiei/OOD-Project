@@ -4,9 +4,14 @@ from django.forms import ModelChoiceField
 from .models import Channel, Post, Tariff
 
 
-class ChannelForm(forms.Form):
-    name = forms.CharField()
+class PremiumForm(forms.Form):
+   series = ModelChoiceField(queryset=Tariff.objects.all())
 
+   class Meta:
+       widget = {'series'}
+
+
+class ChannelForm(forms.Form):
     class Meta:
         model = Channel
 

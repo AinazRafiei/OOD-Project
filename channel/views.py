@@ -10,9 +10,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from userauth.models import User
-from userauth.utils import get_user
+from userauth.utils import get_user, Authentication, login_required
 from .forms import ChannelForm, PostForm, TariffFrom
-from .models import Post, Membership, Channel, Share, Tariff, Subscription
+from .models import Post, Membership, Channel, Share, Tariff, Subscription, PurchasedPost
+from .utils import buy
 
 
 def create_channel(request):
@@ -37,9 +38,8 @@ def show_members(request, channel_id):
             return HttpResponse(status=404)
         members = list(Membership.objects.filter(channel_id=channel_id).values())
         usernames = [User.objects.get(id=i['user_id']).username for i in members]
-        user = get_user(request)
         return render(request, 'html/members.html',
-                      {'usernames': usernames, 'channel_name': channel.name, "username": user.username})
+                      {'usernames': usernames, 'channel_name': channel.name})
     return HttpResponse(status=400)
 
 
@@ -57,14 +57,13 @@ def create_post(request, channel_id):
             if channel.owner == user:
                 if 'is_vip' in form.data:
                     is_vip = True
-                    p1 = Post.objects.create(title=title, price=price, summary=summary, content=content, is_vip=is_vip,
-                                             channel=channel, user=user)
+                    Post.objects.create(title=title, price=price, summary=summary, content=content, is_vip=is_vip,
+                                        channel=channel, user=user)
                 else:
                     is_vip = False
-                    p1 = Post.objects.create(title=title, content=content, is_vip=is_vip,
-                                             channel=channel, user=user)
+                    Post.objects.create(title=title, content=content, is_vip=is_vip,
+                                        channel=channel, user=user)
 
-                Post.save(p1)
                 return redirect(reverse_lazy('channels'))
             else:
                 return HttpResponse("you don't have permission")
@@ -73,8 +72,10 @@ def create_post(request, channel_id):
     return render(request, 'html/create_post.html', {'form': form})
 
 
-def represent_post(post, role):
+def represent_post(post, role, purchased_posts):
     if role in [Membership.Role.Owner.value, Membership.Role.Admin.value, Membership.Role.Vip.value]:
+        return post.represent_full()
+    elif post.id in purchased_posts:
         return post.represent_full()
     else:
         return post.represent_summary()
@@ -101,8 +102,7 @@ class SubscribeView(FormView):
         membership = Membership.objects.get(channel_id=channel_id, user=user)
         if user.wallet.balance < tariff.price:
             return ValidationError
-        user.wallet.balance -= tariff.price
-        user.wallet.save()
+        buy(user, channel_id, tariff.price)
         Subscription.objects.create(user=membership,
                                     until_date=datetime.datetime.now() + datetime.timedelta(
                                         days=tariff.duration))
@@ -130,12 +130,14 @@ class ChannelLeaveView(APIView):
         except Channel.DoesNotExist:
             raise NotFound
         channel.members.remove(user)
+        Share.objects.filter(owner=user, channel=channel).delete()
         return Response()
 
 
 class ChannelDetailView(APIView):
     def get(self, request, channel_id, *args, **kwargs):
         user = get_user(request)
+        purchased_posts = list(PurchasedPost.objects.filter(user=user).values_list('post_id', flat=True))
         posts = Post.objects.filter(channel_id=channel_id).order_by('published_at')
         try:
             channel = Channel.objects.get(id=channel_id)
@@ -143,7 +145,7 @@ class ChannelDetailView(APIView):
             raise NotFound
         role = get_role(channel, user)
         return Response(
-            data=dict(role=role, posts=[represent_post(post, role) for post in posts]))
+            data=dict(role=role, posts=[represent_post(post, role, purchased_posts) for post in posts]))
 
 
 class ChannelAdminsView(APIView):
@@ -211,7 +213,7 @@ class ChannelTariffsView(APIView):
             tariffs.append((tariff.get_duration_display(), tariff.duration, tariff.price))
         choices = Tariff.DurationChoice.choices
         return render(request, 'html/tariff.html',
-                      {"tariffs": tariffs, "choices": choices, "channel_name": channel.name, "username": user.username})
+                      {"tariffs": tariffs, "choices": choices, "channel_name": channel.name})
 
     def post(self, request, channel_id, *args, **kwargs):
         user = get_user(request)
@@ -238,10 +240,9 @@ class AllChannelsView(View):
             published_at = post.published_at
         return channel.id, channel.name, summary, published_at.date() if published_at else ''
 
+    @login_required
     def get(self, request, *args, **kwargs):
         user = get_user(request)
-        if user is None:
-            return redirect(reverse_lazy('login'))
         channels = list()
         user_channels = Channel.objects.filter(owner=user)
         user_followings = Channel.objects.filter(id__in=Membership.objects.filter(user=user).values_list("channel_id"))
@@ -260,4 +261,31 @@ class AllChannelsView(View):
         #     key=lambda x: x[3])
         channels = [self.get_channel_data(channel) for channel in Channel.objects.all()]
         print(len(channels))
-        return render(request, 'html/home.html', {"channels": channels, "username": user.username})
+        return render(request, 'html/home.html', {"channels": channels})
+
+
+class PurchasePostView(APIView):
+    def get(self, request, channel_id, post_id, *args, **kwargs):
+        try:
+            post = Post.objects.get(id=post_id)
+        except Post.DoesNotExist:
+            return NotFound
+        return render(request, 'html/purchase_post.html',
+                      {'channel_id': channel_id, 'title': post.title, 'summary': post.summary, 'price': post.price,
+                       'time': post.published_at, 'channel_name': post.channel.name})
+
+    def post(self, request, channel_id, post_id, *args, **kwargs):
+        user = get_user(request)
+        if not user:
+            return redirect(reverse_lazy('login'))
+        try:
+            post = Post.objects.get(id=post_id)
+        except Post.DoesNotExist:
+            return NotFound
+        if PurchasedPost.objects.filter(post=post, user=user).exists():
+            return redirect(reverse_lazy('channels'))
+        if user.wallet.balance < post.price:
+            return ValidationError
+        buy(user, channel_id, post.price)
+        PurchasedPost.objects.create(post=post, user=user)
+        return redirect(reverse_lazy('channels'))

@@ -1,0 +1,59 @@
+{% extends 'html/base.html' %}
+
+{% block title %}Login{% endblock title %}
+{% block style %}
+    <style>
+        .btn1 {
+            background: rgba(255, 173, 7, .9);
+            border: 1px solid rgba(255, 173, 7, 0.4);
+        }
+
+        .btn1:hover {
+            background: #fad932;
+            border: 1px solid rgba(255, 173, 7, 0.4);
+        }
+
+        .card1 {
+            background: #000000;
+            border: 1px solid rgba(255, 173, 7, 0.4);
+        }
+
+        .card1:hover {
+        {#background:rgba(127, 87, 3, 0.4);#} border: 1px solid rgba(255, 173, 7, .9);
+        }
+
+        .card1:hover .list-group-item {
+            background: rgba(255, 173, 7, .9);
+        !important
+        }
+
+    </style>
+
+{% endblock style %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="container p-5">
+            <div class="row">
+                <div class="col-lg-4 col-md-12 mb-4">
+                    <div class="card card1 h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ title }}</h5>
+                            <small class='text-muted'>{{ summary }}</small>
+                            <br><br>
+                            <span class="h2">${{ price }}</span>
+                            <br><br>
+                            <form method="post" class="d-grid my-3">
+                                <button class="btn btn1">Purchase</button>
+                            </form>
+                            <ul>
+                                <li>{{ channel_name }}</li>
+                                <li>{{ time }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

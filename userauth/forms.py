@@ -6,6 +6,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError
 from django.forms import ModelForm, Form
 
+from transactions.models import Wallet
 from userauth.models import User
 
 email_regex = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
@@ -49,6 +50,11 @@ class SignUpForm(ModelForm):
     def clean_password(self):
         password = self.cleaned_data['password']
         return make_password(password)
+
+    def save(self, commit=True):
+        user = super(SignUpForm, self).save(commit)
+        Wallet.objects.create(user=user)
+        return user
 
 
 class LoginForm(Form):

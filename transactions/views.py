@@ -1,11 +1,12 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import User, Wallet
-from .forms import WithdrawForm, ChargeForm
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from userauth.utils import get_user
+from .forms import WithdrawForm, ChargeForm
+from .models import Wallet
 
 
 class UserBalanceAPIView(APIView):
@@ -13,8 +14,7 @@ class UserBalanceAPIView(APIView):
         user = get_user(request)
         user_wallet = Wallet.objects.get_or_create(user=user)
         return render(request, 'html/show_amount.html',
-                      {'username': user.username, 'balance': user_wallet[0].balance, 'charge_form': ChargeForm,
-                       'withdraw_form': WithdrawForm})
+                      {'balance': "%.2f" % user_wallet[0].balance, 'charge_form': ChargeForm, 'withdraw_form': WithdrawForm})
 
 
 class ChargeAPIView(APIView):

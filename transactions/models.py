@@ -14,4 +14,4 @@ class TransactionCatalogue(models.Model):
 
 class Wallet(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    balance = models.IntegerField(default=0)
+    balance = models.FloatField(default=0)

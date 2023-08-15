@@ -19,11 +19,11 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
 
-from channel.views import create_post, create_channel, ChannelDetailView, AllChannelsView, ChannelJoinView, \
-    ChannelLeaveView, ChannelAdminsView, ChannelTariffsView, SubscribeView
+from channel.views import ChannelDetailView, AllChannelsView, ChannelJoinView, \
+    ChannelLeaveView, ChannelAdminsView, ChannelTariffsView, SubscribeView, create_post, create_channel, show_members, \
+    PurchasePostView
 from transactions.views import UserBalanceAPIView, ChargeAPIView, WithdrawAPIView
-from userauth.views import SignUpView, LoginView, LogoutView, Home
-from channel.views import create_post, create_channel, show_members
+from userauth.views import SignUpView, LoginView, LogoutView, NavbarView
 
 urlpatterns = [
                   path('admin/', admin.site.urls),
@@ -37,11 +37,13 @@ urlpatterns = [
                   path('channels/<int:channel_id>/tariffs', ChannelTariffsView.as_view(), name='channel_tariffs'),
                   path('channels/<int:channel_id>/members', show_members, name='show_members'),
                   path('channels/<int:channel_id>/post', create_post, name='create_post'),
+                  path('channels/<int:channel_id>/posts/<int:post_id>/purchase', PurchasePostView.as_view(), name='purchase_post'),
                   path('channels/<int:channel_id>/join', ChannelJoinView.as_view(), name='create_post'),
                   path('channels/<int:channel_id>/leave', ChannelLeaveView.as_view(), name='create_post'),
+                  path('channels/<int:channel_id>/subscribe', SubscribeView.as_view(), name='subscribe'),
                   path('wallet/', UserBalanceAPIView.as_view(), name='wallet'),
                   path('charge/', ChargeAPIView.as_view(), name='charge'),
                   path('withdraw/', WithdrawAPIView.as_view(), name='withdraw'),
-                  path('subscribe/<int:channel_id>/', SubscribeView.as_view(), name='subscribe'),
+                  path('navbar/', NavbarView.as_view(), name='navbar'),
 
               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

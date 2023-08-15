@@ -25,8 +25,9 @@
                     </span>
                                     </div>
 
-                                    <div data-mdb-perfect-scrollbar="true" style="position: relative; height: 400px">
-                                        <ul class="list-unstyled mb-0" id="channels">
+                                    <div data-mdb-perfect-scrollbar="true"
+                                         style="position: relative; height: 450px;overflow-y: scroll;">
+                                        <ul class="list-unstyled mb-0" id="channels" style="padding-right: 5%;">
                                         </ul>
                                     </div>
 
@@ -35,10 +36,10 @@
                             </div>
 
                             <div class="col-md-6 col-lg-7 col-xl-8">
-                                    <div role="group" aria-label="Basic example" id="buttons">
-                                    </div>
+                                <div role="group" aria-label="Basic example" id="buttons">
+                                </div>
                                 <div class="pt-3 pe-3" data-mdb-perfect-scrollbar="true"
-                                     style="position: relative; height: 100px" id="posts">
+                                     style="position: relative; height: 520px;overflow-y: scroll;" id="posts">
 
                                 </div>
 
@@ -52,7 +53,7 @@
         </div>
     </section>
     <script>
-    let focused_channel = null;
+        let focused_channel = null;
         (function init() {
             var channels_div = document.getElementById("channels")
             {% for channel_id, channel_name, last_message, time in channels %}
@@ -75,10 +76,11 @@
                     var posts_div = document.getElementById("posts");
                     posts_div.textContent = ""
                     for (var i = 0; i < posts.length; i++) {
-                        elm = makePost(posts[i][0], posts[i][1], posts[i][2], posts[i][3]);
+                        elm = makePost(channel_id, posts[i][0], posts[i][1], posts[i][2], posts[i][3], posts[i][4]);
                         posts_div.appendChild(elm)
                     }
                     adjust_buttons(role, channel_id)
+                    posts_div.scrollTo(0, posts_div.scrollHeight);
                 }
                 xhr.onerror = function () {
                 }
@@ -102,7 +104,7 @@
 
             var admins = base_button.cloneNode(false);
             admins.setAttribute("href", channel_id + "/admins")
-            admins.innerHTML = 'Admins <i class="fa-solid fa-gear"></i>'
+            admins.innerHTML = 'Admins <i class="fa-solid fa-user-tie"></i>'
 
             var tariffs = base_button.cloneNode(false);
             tariffs.setAttribute("href", channel_id + "/tariffs")
@@ -113,8 +115,8 @@
             post.innerHTML = 'Post <i class="fas fa-paper-plane"></i>'
 
             var premium = base_button.cloneNode(false);
-            premium.setAttribute("href", "#")
-            premium.innerHTML = 'Premium <i class="fa-solid fa-star"></i>'
+            premium.setAttribute("href", channel_id + "/subscribe")
+            premium.innerHTML = 'Subscribe <i class="fa-solid fa-star"></i>'
 
             var leave = base_button.cloneNode(false);
             leave.onclick = function () {
@@ -162,7 +164,7 @@
             }
         }
 
-        function makePost(title, body, purchasable, time) {
+        function makePost(channel_id, post_id, title, body, purchasable, time) {
             var outer_div = document.createElement("div");
             outer_div.setAttribute("class", "d-flex flex-row justify-content-start");
 
@@ -192,7 +194,7 @@
             if (purchasable) {
                 var purchase = document.createElement('a');
                 purchase.setAttribute("class", "ms-2");
-                purchase.setAttribute("href", "#!");
+                purchase.setAttribute("href", channel_id + "/posts/" + post_id + "/purchase");
                 purchase.innerText = 'purchase';
                 inner_div.appendChild(purchase);
             }
@@ -213,7 +215,7 @@
             var a = document.createElement('a');
             a.setAttribute("class", "d-flex justify-content-between");
             a.onclick = function () {
-                if (focused_channel != null){
+                if (focused_channel != null) {
                     focused_channel.style.color = '#fad932';
                 }
                 this.style.color = 'white';

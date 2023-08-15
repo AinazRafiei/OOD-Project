@@ -69,9 +69,15 @@ class Post(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def represent_full(self):
-        return [self.title, self.content, False, self.published_at.strftime("%B %d, %Y | %H:%M")]
+        return [self.id, self.title, self.content, False, self.published_at.strftime("%B %d, %Y | %H:%M")]
 
     def represent_summary(self):
         if self.is_vip:
-            return [self.title, self.summary, True, self.published_at.strftime("%B %d, %Y | %H:%M")]
+            return [self.id, self.title, self.summary, True, self.published_at.strftime("%B %d, %Y | %H:%M")]
         return self.represent_full()
+
+
+class PurchasedPost(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    purchased_at = models.DateTimeField(auto_now_add=True)

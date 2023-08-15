@@ -6,7 +6,7 @@
         {% csrf_token %}
         <fieldset class="module aligned">
             <label style="width: 15%; font-size: 24px;">Admin</label><label style="width: 15%; font-size: 24px;">Share</label>
-            <div id="admins">
+            <div id="admins" style="padding-top: 20px;">
                 <div class="form-row">
                     <label style="width: 15%;">{{ username }} : </label><input type="hidden" name="userid"
                                                                                value="{{ userid }}"><input
@@ -78,7 +78,6 @@
 
             form_row.appendChild(lable);
             form_row.appendChild(user_id_input);
-            form_row.appendChild(name_input);
             form_row.appendChild(share_input);
             form_row.appendChild(remove_button);
 
