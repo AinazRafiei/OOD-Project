@@ -5,15 +5,16 @@ from .models import Channel, Post, Tariff
 
 
 class PremiumForm(forms.Form):
-   series = ModelChoiceField(queryset=Tariff.objects.all())
+    series = ModelChoiceField(queryset=Tariff.objects.all())
 
-   class Meta:
-       widget = {'series'}
+    class Meta:
+        widget = {'series'}
 
 
-class ChannelForm(forms.Form):
+class ChannelForm(forms.ModelForm):
     class Meta:
         model = Channel
+        fields = ['name']
 
 
 class PostForm(forms.ModelForm):
