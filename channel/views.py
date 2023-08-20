@@ -141,7 +141,10 @@ class ChannelDetailView(APIView):
         membership = Membership.objects.get(user_id=user.id, channel_id=channel_id)
         subscription = Subscription.objects.get(user=membership)
         until_date = subscription.until_date
-        remaining_time = datetime.datetime.now() - until_date
+        remaining_time = until_date - datetime.datetime.now()
+        if datetime.datetime.now() > until_date:
+            membership.role = Membership.Role.Normal
+            membership.save()
         return remaining_time
 
 
@@ -155,9 +158,8 @@ class ChannelDetailView(APIView):
             raise NotFound
         try:
             expiration = self.get_expiration(user, channel_id)
-        except:
-            expiration = 0
-            pass
+        except (Membership.DoesNotExist, Subscription.DoesNotExist):
+            expiration = 'expired VIP mode.'
         role = get_role(channel, user)
         return Response(
             data=dict(role=role, posts=[represent_post(post, role, purchased_posts) for post in posts], expiration=expiration))
@@ -280,29 +282,13 @@ class AllChannelsView(View):
 
 
 class PurchasePostView(APIView):
-
-    def check_the_expiration_date(self, request, channel_id):
-        user = get_user(request)
-        membership = Membership.objects.get(user_id=user.id, channel_id=channel_id)
-        subscription = Subscription.objects.get(user=membership)
-        until_date = subscription.until_date
-        if datetime.datetime.now() < until_date:
-            return True
-        else:
-            return False
-
     def get(self, request, channel_id, post_id, *args, **kwargs):
         try:
             post = Post.objects.get(id=post_id)
         except Post.DoesNotExist:
             return NotFound
-        if self.check_the_expiration_date(request, channel_id):
-            return render(request, 'html/purchase_post.html',
-                          {'channel_id': channel_id, 'title': post.title, 'summary': post.summary, 'price': post.price,
-                           'time': post.published_at, 'channel_name': post.channel.name})
         return render(request, 'html/purchase_post.html',
-                      {'channel_id': channel_id, 'title': post.title, 'summary': 'please buy this post!',
-                       'price': post.price,
+                      {'channel_id': channel_id, 'title': post.title, 'summary': post.summary, 'price': post.price,
                        'time': post.published_at, 'channel_name': post.channel.name})
 
     def post(self, request, channel_id, post_id, *args, **kwargs):

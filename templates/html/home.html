@@ -60,10 +60,7 @@
                 var elm = makeChannels('{{ channel_id}}', '{{ channel_name}}', '{{ last_message}}', '{{ time}}');
                 channels_div.appendChild(elm)
             {% endfor %}
-            {#channels_div.children[0].click()#}
         })();
-
-        {#todo: check it#}
 
         function getChannelDetail(channel_id) {
             var xhr = new XMLHttpRequest();
@@ -91,7 +88,7 @@
             }
         }
 
-        function adjust_buttons(role, channel_id,expiration) {
+        function adjust_buttons(role, channel_id, expiration) {
             var buttons_div = document.getElementById("buttons");
             buttons_div.textContent = ""
 
@@ -158,13 +155,12 @@
             } else if (role === 'admin') {
                 chosen_buttons = [post, leave]
             } else if (role === 'vip') {
-                chosen_buttons = [leave]
+                chosen_buttons = [expiration, leave]
             } else if (role === 'normal') {
                 chosen_buttons = [premium, leave]
             } else {
                 chosen_buttons = [join]
             }
-            chosen_buttons.push(expire)
             chosen_buttons[0].style.margin = "0 0 0 " + (51 - chosen_buttons.length * 11) + "%";
             for (var i = 0; i < chosen_buttons.length; i++) {
                 buttons_div.appendChild(chosen_buttons[i]);
