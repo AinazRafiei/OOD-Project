@@ -151,8 +151,8 @@ class ChannelDetailView(APIView):
         membership = Membership.objects.get(user_id=user.id, channel_id=channel_id)
         subscription = Subscription.objects.get(user=membership)
         until_date = subscription.until_date
-        remaining_time = until_date - datetime.datetime.now()
-        if datetime.datetime.now() > until_date:
+        remaining_time = until_date.replace(tzinfo=None) - datetime.datetime.now()
+        if datetime.datetime.now() > until_date.replace(tzinfo=None):
             membership.role = Membership.Role.Normal
             membership.save()
         return remaining_time
@@ -168,8 +168,9 @@ class ChannelDetailView(APIView):
             raise NotFound
         try:
             expiration = self.get_expiration(user, channel_id)
+            expiration = expiration.days
         except (Membership.DoesNotExist, Subscription.DoesNotExist):
-            expiration = 'expired VIP mode.'
+            expiration = 0
         role = get_role(channel, user)
         return Response(
             data=dict(role=role, posts=[represent_post(post, role, purchased_posts) for post in posts], expiration=expiration))

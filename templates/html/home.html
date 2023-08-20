@@ -78,7 +78,8 @@
                         elm = makePost(channel_id, posts[i][0], posts[i][1], posts[i][2], posts[i][3], posts[i][4]);
                         posts_div.appendChild(elm)
                     }
-                    adjust_buttons(role, channel_id,expiration=0)
+
+                    adjust_buttons(role, channel_id, data['expiration'])
                     posts_div.scrollTo(0, posts_div.scrollHeight);
                 }
                 xhr.onerror = function () {
@@ -98,8 +99,7 @@
             base_button.style.margin = "0 0 0 2%"
 
             var expire = base_button.cloneNode(false);
-            expire.setAttribute("href", channel_id + "/members")
-            expire.innerHTML = 'Expiration :'+expiration
+            expire.innerHTML = 'Expiration :'+expiration + ' days'
 
             var members = base_button.cloneNode(false);
             members.setAttribute("href", channel_id + "/members")
@@ -155,7 +155,7 @@
             } else if (role === 'admin') {
                 chosen_buttons = [post, leave]
             } else if (role === 'vip') {
-                chosen_buttons = [expiration, leave]
+                chosen_buttons = [expire, leave]
             } else if (role === 'normal') {
                 chosen_buttons = [premium, leave]
             } else {
