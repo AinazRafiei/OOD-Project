@@ -54,17 +54,35 @@
     </section>
     <script>
         let focused_channel = null;
-        (function init() {
-            var channels_div = document.getElementById("channels")
-            {% for channel_id, channel_name, last_message, time in channels %}
-                var elm = makeChannels('{{ channel_id}}', '{{ channel_name}}', '{{ last_message}}', '{{ time}}');
-                channels_div.appendChild(elm)
-            {% endfor %}
-        })();
+
+        function init_channels() {
+            fetch('/channels/', {
+                method: "GET",
+            }).then(function (response) {
+                // The API call was successful!
+                if (response.ok) {
+                    return response.json();
+                }
+                // There was an error
+                return Promise.reject(response);
+            }).then(function (data) {
+                let channels_div = document.getElementById("channels")
+                channels_div.innerHTML = ''
+                for (const item of data.channels) {
+                    const elm = makeChannels(item.channel_id, item.channel_name, item.last_message, item.time);
+                    channels_div.appendChild(elm)
+                }
+            }).catch(function (err) {
+                // There was an error
+                console.warn('Something went wrong.', err);
+            });
+        }
+
+        init_channels();
 
         function getChannelDetail(channel_id) {
             var xhr = new XMLHttpRequest();
-            xhr.open('GET', channel_id + '/detail');
+            xhr.open('GET', '/channels/' + channel_id + '/detail');
             xhr.timeout = 1000;
             xhr.send();
             xhr.onload = function () {
@@ -99,32 +117,32 @@
             base_button.style.margin = "0 0 0 2%"
 
             var expire = base_button.cloneNode(false);
-            expire.innerHTML = 'Expiration :'+expiration + ' days'
+            expire.innerHTML = 'Ends in ' + expiration + ' <i class="fa-solid fa-hourglass-end"></i>'
 
             var members = base_button.cloneNode(false);
-            members.setAttribute("href", channel_id + "/members")
+            members.setAttribute("href", "/channels/" + channel_id + "/members")
             members.innerHTML = 'Members <i class="fas fa-search"></i>'
 
             var admins = base_button.cloneNode(false);
-            admins.setAttribute("href", channel_id + "/admins")
+            admins.setAttribute("href", "/channels/" + channel_id + "/admins")
             admins.innerHTML = 'Admins <i class="fa-solid fa-user-tie"></i>'
 
             var tariffs = base_button.cloneNode(false);
-            tariffs.setAttribute("href", channel_id + "/tariffs")
+            tariffs.setAttribute("href", "/channels/" + channel_id + "/tariffs")
             tariffs.innerHTML = 'Tariffs <i class="fa-solid fa-gear"></i>'
 
             var post = base_button.cloneNode(false);
-            post.setAttribute("href", channel_id + "/post")
+            post.setAttribute("href", "/channels/" + channel_id + "/post")
             post.innerHTML = 'Post <i class="fas fa-paper-plane"></i>'
 
             var premium = base_button.cloneNode(false);
-            premium.setAttribute("href", channel_id + "/subscribe")
+            premium.setAttribute("href", "/channels/" + channel_id + "/subscribe")
             premium.innerHTML = 'Subscribe <i class="fa-solid fa-star"></i>'
 
             var leave = base_button.cloneNode(false);
             leave.onclick = function () {
                 var xhr = new XMLHttpRequest();
-                xhr.open('POST', channel_id + '/leave');
+                xhr.open('POST', "/channels/" + channel_id + '/leave');
                 xhr.timeout = 1000;
                 xhr.send();
                 xhr.onload = function () {
@@ -138,7 +156,7 @@
             var join = base_button.cloneNode(false);
             join.onclick = function () {
                 var xhr = new XMLHttpRequest();
-                xhr.open('POST', channel_id + '/join');
+                xhr.open('POST', "/channels/" + channel_id + '/join');
                 xhr.timeout = 1000;
                 xhr.send();
                 xhr.onload = function () {
@@ -197,7 +215,7 @@
             if (purchasable) {
                 var purchase = document.createElement('a');
                 purchase.setAttribute("class", "ms-2");
-                purchase.setAttribute("href", channel_id + "/posts/" + post_id + "/purchase");
+                purchase.setAttribute("href", "/channels/" + channel_id + "/posts/" + post_id + "/purchase");
                 purchase.innerText = 'purchase';
                 inner_div.appendChild(purchase);
             }
@@ -261,89 +279,32 @@
         }
 
         let searchTest = document.getElementById('formSearch')
-        searchTest.addEventListener("change", function (e) {
-            fetch('http://127.0.0.1:8000/search-channel/' + e.target.value, {
-                method: "POST",
-            }).then(function (response) {
-                // The API call was successful!
-                if (response.ok) {
-                    return response.json();
-                }
-                // There was an error
-                return Promise.reject(response);
-            }).then(function (data) {
-                let channels_div = document.getElementById("channels")
-                channels_div.innerHTML = ''
-                for (const item of data.channels) {
-                    const elm = makeChannels(item.channel_id, item.channel_name, item.last_message, item.time);
-                    channels_div.appendChild(elm)
-                }
-            }).catch(function (err) {
-                // There was an error
-                console.warn('Something went wrong.', err);
-            });
-            console.log(e.target.value)
-        })
-
-        {#function searchChannels(element) {#}
-        {#    var el = element.valueOf();#}
-        {#    console.log(element)#}
-        {#    var channels_div = document.getElementById("channels")#}
-        {#    channels_div.textContent = '';#}
-        {#    {% for channel_id, channel_name, last_message, time in channels %}#}
-        {#        var elm = makeChannels('{{ channel_id}}', '{{ channel_name}}', '{{ last_message}}', '{{ time}}');#}
-        {#        channels_div.appendChild(elm)#}
-        {#    {% endfor %}#}
-        {##}
-        {##}
-        {##}
-        {#    var li = document.createElement("li");#}
-        {#    li.setAttribute("class", "p-2 border-bottom");#}
-        {#    li.style.cursor = 'pointer';#}
-        {##}
-        {#    var a = document.createElement('a');#}
-        {#    a.setAttribute("class", "d-flex justify-content-between");#}
-        {#    a.onclick = function () {#}
-        {#        if (focused_channel != null) {#}
-        {#            focused_channel.style.color = '#fad932';#}
-        {#        }#}
-        {#        this.style.color = 'white';#}
-        {#        focused_channel = this;#}
-        {#        getChannelDetail(channel_id);#}
-        {#    }#}
-        {##}
-        {#    li.appendChild(a)#}
-        {##}
-        {##}
-        {#    var outer_div = document.createElement("div");#}
-        {#    outer_div.setAttribute("class", "d-flex flex-row");#}
-        {#    a.appendChild(outer_div)#}
-        {##}
-        {#    var inner_div = document.createElement('div');#}
-        {#    inner_div.setAttribute("class", "pt-1");#}
-        {#    outer_div.appendChild(inner_div);#}
-        {##}
-        {##}
-        {#    var name = document.createElement("p");#}
-        {#    name.setAttribute("class", "fw-bold mb-0");#}
-        {#    name.innerText = channel_name;#}
-        {#    inner_div.appendChild(name)#}
-        {##}
-        {#    var message = document.createElement("p");#}
-        {#    message.setAttribute("class", "small text-muted");#}
-        {#    message.innerText = last_message;#}
-        {#    inner_div.appendChild(message)#}
-        {##}
-        {#    inner_div = document.createElement('div');#}
-        {#    inner_div.setAttribute("class", "pt-1");#}
-        {#    a.appendChild(inner_div);#}
-        {##}
-        {#    var time_elm = document.createElement('p');#}
-        {#    time_elm.setAttribute("class", "small text-muted mb-1");#}
-        {#    time_elm.innerText = time;#}
-        {#    inner_div.appendChild(time_elm);#}
-        {##}
-        {#    return li;#}
+        searchTest.oninput = function (e) {
+            if (e.target.value === '') {
+                init_channels();
+            } else {
+                fetch('/channels/search/' + e.target.value, {
+                    method: "GET",
+                }).then(function (response) {
+                    // The API call was successful!
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    // There was an error
+                    return Promise.reject(response);
+                }).then(function (data) {
+                    let channels_div = document.getElementById("channels")
+                    channels_div.innerHTML = ''
+                    for (const item of data.channels) {
+                        const elm = makeChannels(item.channel_id, item.channel_name, item.last_message, item.time);
+                        channels_div.appendChild(elm)
+                    }
+                }).catch(function (err) {
+                    // There was an error
+                    console.warn('Something went wrong.', err);
+                });
+            }
+        }
 
     </script>
 {% endblock content %}

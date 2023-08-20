@@ -1,9 +1,9 @@
 import datetime
 
+from django.http import JsonResponse
 from django.shortcuts import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
-from django.views import View
 from django.views.generic import FormView
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.response import Response
@@ -14,7 +14,6 @@ from userauth.utils import get_user, login_required
 from .forms import ChannelForm, PostForm, TariffFrom
 from .models import Post, Membership, Channel, Share, Tariff, Subscription, PurchasedPost
 from .utils import buy
-from django.http import JsonResponse
 
 
 def create_channel(request):
@@ -25,7 +24,7 @@ def create_channel(request):
             user = get_user(request)
             ch1 = Channel.objects.create(name=channel_name, owner=user)
             Channel.save(ch1)
-            return redirect(reverse_lazy('channels'))
+            return redirect(reverse_lazy('home'))
     else:
         form = ChannelForm()
     return render(request, 'html/create_channel.html', {'form': form})
@@ -65,7 +64,7 @@ def create_post(request, channel_id):
                     Post.objects.create(title=title, content=content, is_vip=is_vip,
                                         channel=channel, user=user)
 
-                return redirect(reverse_lazy('channels'))
+                return redirect(reverse_lazy('home'))
             else:
                 return HttpResponse("you don't have permission")
     else:
@@ -107,19 +106,21 @@ class SubscribeView(FormView):
         return super(SubscribeView, self).get(request, *args, **kwargs)
 
     def post(self, request, channel_id, *args, **kwargs):
+        self.channel_id = channel_id
         form = self.get_form()
         user = get_user(request)
         tariff = Tariff.objects.get(id=form.data['tariff'])
         membership = Membership.objects.get(channel_id=channel_id, user=user)
         if user.wallet.balance < tariff.price:
-            return ValidationError
+            form.add_error('tariff', 'Insufficient credits')
+            return self.form_invalid(form)
         buy(user, channel_id, tariff.price)
         Subscription.objects.create(user=membership,
                                     until_date=datetime.datetime.now() + datetime.timedelta(
                                         days=tariff.duration))
         membership.role = Membership.Role.Vip
         membership.save()
-        return redirect(reverse_lazy('channels'))
+        return redirect(reverse_lazy('home'))
 
 
 class ChannelJoinView(APIView):
@@ -146,17 +147,31 @@ class ChannelLeaveView(APIView):
 
 
 class ChannelDetailView(APIView):
-
     def get_expiration(self, user, channel_id):
-        membership = Membership.objects.get(user_id=user.id, channel_id=channel_id)
-        subscription = Subscription.objects.get(user=membership)
+        try:
+            membership = Membership.objects.get(user_id=user.id, channel_id=channel_id)
+        except Membership.DoesNotExist:
+            return
+        try:
+            subscription = Subscription.objects.get(user=membership)
+        except Subscription.DoesNotExist:
+            return
         until_date = subscription.until_date
         remaining_time = until_date.replace(tzinfo=None) - datetime.datetime.now()
         if datetime.datetime.now() > until_date.replace(tzinfo=None):
             membership.role = Membership.Role.Normal
             membership.save()
-        return remaining_time
-
+            return
+        if remaining_time.days > 1:
+            return f'{remaining_time.days} days'
+        elif remaining_time.days == 1:
+            return f'a day'
+        elif remaining_time.hours > 1:
+            return f'{remaining_time.days} hours'
+        elif remaining_time.hours == 1:
+            return f'an hour'
+        else:
+            return 'less than hour'
 
     def get(self, request, channel_id, *args, **kwargs):
         user = get_user(request)
@@ -166,14 +181,11 @@ class ChannelDetailView(APIView):
             channel = Channel.objects.get(id=channel_id)
         except Channel.DoesNotExist:
             raise NotFound
-        try:
-            expiration = self.get_expiration(user, channel_id)
-            expiration = expiration.days
-        except (Membership.DoesNotExist, Subscription.DoesNotExist):
-            expiration = 0
+        expiration = self.get_expiration(user, channel_id)
         role = get_role(channel, user)
         return Response(
-            data=dict(role=role, posts=[represent_post(post, role, purchased_posts) for post in posts], expiration=expiration))
+            data=dict(role=role, posts=[represent_post(post, role, purchased_posts) for post in posts],
+                      expiration=expiration))
 
 
 class ChannelAdminsView(APIView):
@@ -258,7 +270,7 @@ class ChannelTariffsView(APIView):
         return self.get(request, channel_id, *args, **kwargs)
 
 
-class AllChannelsView(View):
+class AllChannelsView(APIView):
     def get_channel_data(self, channel):
         post = Post.objects.filter(channel_id=channel.id).order_by('-published_at').first()
         summary = ''
@@ -266,7 +278,8 @@ class AllChannelsView(View):
         if post:
             summary = post.represent_summary()[1][:16]
             published_at = post.published_at
-        return channel.id, channel.name, summary, published_at.date() if published_at else ''
+        return {'channel_id': channel.id, 'channel_name': channel.name, 'last_message': summary,
+                'time': published_at.date() if published_at else ''}
 
     @login_required
     def get(self, request, *args, **kwargs):
@@ -275,21 +288,22 @@ class AllChannelsView(View):
         user_channels = Channel.objects.filter(owner=user)
         user_followings = Channel.objects.filter(id__in=Membership.objects.filter(user=user).values_list("channel_id"))
 
-        def compare_datatime(x, y):
-            if y[3] is None:
-                return True
-            if x[3] is None:
-                return False
-            return x[3] > y[3]
+        def smooth_date(x):
+            if x['time']:
+                return x['time']
+            return datetime.datetime(year=1, month=1, day=1).date()
 
-        # channels.extend(sorted([self.get_channel_data(channel) for channel in user_channels], key=lambda x: x[3]))
-        # channels.extend(sorted([self.get_channel_data(channel) for channel in user_followings], key=lambda x: x[3]))
-        # channels = sorted(
-        #     filter(lambda x: x[3] is not None, [self.get_channel_data(channel) for channel in Channel.objects.all()]),
-        #     key=lambda x: x[3])
-        channels = [self.get_channel_data(channel) for channel in Channel.objects.all()]
-        print(len(channels))
-        return render(request, 'html/home.html', {"channels": channels})
+        channels.extend(sorted([self.get_channel_data(channel) for channel in user_channels], key=smooth_date))
+        channels.extend(sorted([self.get_channel_data(channel) for channel in user_followings], key=smooth_date))
+        return JsonResponse({'channels': channels})
+
+
+class JoinView(APIView):
+    def post(self, request, channel_id, *args, **kwargs):
+        user = get_user(request)
+        if user and not Membership.objects.filter(channel_id=channel_id, user_id=user.id).exists():
+            Membership.objects.create(channel_id=channel_id, user_id=user.id)
+        return Response()
 
 
 class PurchasePostView(APIView):
@@ -311,44 +325,26 @@ class PurchasePostView(APIView):
         except Post.DoesNotExist:
             return NotFound
         if PurchasedPost.objects.filter(post=post, user=user).exists():
-            return redirect(reverse_lazy('channels'))
+            return redirect(reverse_lazy('home'))
         if user.wallet.balance < post.price:
             return ValidationError
         buy(user, channel_id, post.price)
         PurchasedPost.objects.create(post=post, user=user)
-        return redirect(reverse_lazy('channels'))
-
-
-class ShowExpirationView(APIView):
-
-    def get(self, request, channel_id):
-        user = get_user(request)
-        membership = Membership.objects.get(user_id=user.id, channel_id=channel_id)
-
-        try:
-            subscription = Subscription.objects.get(user=membership)
-            until_date = subscription.until_date
-            remaining_time = datetime.datetime.now() - until_date
-            return JsonResponse({'remaining_time': remaining_time})
-        except Subscription.DoesNotExist:
-            return JsonResponse({'message': 'No subscription found.'})
+        return redirect(reverse_lazy('home'))
 
 
 class SearchChannelView(APIView):
     def get_channel_data(self, channel):
-        post = Post.objects.filter(channel_id=channel['id']).order_by('-published_at').first()
+        post = Post.objects.filter(channel_id=channel.id).order_by('-published_at').first()
         summary = ''
         published_at = None
         if post:
             summary = post.represent_summary()[1][:16]
             published_at = post.published_at
-        return {'channel_id': channel['id'], 'channel_name': channel['name'], 'last_message': summary, 'time': published_at.date() if published_at else ''}
+        return {'channel_id': channel.id, 'channel_name': channel.name, 'last_message': summary,
+                'time': published_at.date() if published_at else ''}
 
-    def post(self, request, channel_name):
+    def get(self, request, channel_name):
         matching_channels = Channel.objects.filter(name__icontains=channel_name)
-        if len(matching_channels) > 0:
-            matching_channels = list(matching_channels.values())
-            channels = [self.get_channel_data(channel) for channel in matching_channels]
-            return JsonResponse({'channels': channels})
-        else:
-            return JsonResponse({'channels': []})
+        channels = [self.get_channel_data(channel) for channel in matching_channels]
+        return JsonResponse({'channels': channels})
