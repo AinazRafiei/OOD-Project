@@ -21,7 +21,7 @@ from django.urls import path
 
 from channel.views import ChannelDetailView, AllChannelsView, ChannelJoinView, \
     ChannelLeaveView, ChannelAdminsView, ChannelTariffsView, SubscribeView, create_post, create_channel, show_members, \
-    PurchasePostView
+    PurchasePostView, ShowExpirationView, SearchChannelView
 from transactions.views import UserBalanceAPIView, ChargeAPIView, WithdrawAPIView
 from userauth.views import SignUpView, LoginView, LogoutView, NavbarView
 
@@ -45,5 +45,7 @@ urlpatterns = [
                   path('charge/', ChargeAPIView.as_view(), name='charge'),
                   path('withdraw/', WithdrawAPIView.as_view(), name='withdraw'),
                   path('navbar/', NavbarView.as_view(), name='navbar'),
+                  path('show-expiration/<int:channel_id>', ShowExpirationView.as_view(), name='show_expiration'),
+                  path('search-channel/<str:channel_name>', SearchChannelView.as_view(), name='search_channel'),
 
               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

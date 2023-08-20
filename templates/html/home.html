@@ -14,13 +14,13 @@
                             <div class="col-md-6 col-lg-5 col-xl-4 mb-4 mb-md-0">
 
                                 <div class="p-3">
-
                                     <div class="input-group rounded mb-3">
                                         <input type="search" class="form-control rounded" placeholder="Search"
                                                aria-label="Search"
-                                               aria-describedby="search-addon"/>
+                                               aria-describedby="search-addon"
+                                               id="formSearch"/>
                                         <span class="input-group-text border-0" id="search-addon"
-                                              style="background: black">
+                                              style="background: black;cursor: pointer">
                       <i class="fas fa-search" style="color: white"></i>
                     </span>
                                     </div>
@@ -63,6 +63,8 @@
             {#channels_div.children[0].click()#}
         })();
 
+        {#todo: check it#}
+
         function getChannelDetail(channel_id) {
             var xhr = new XMLHttpRequest();
             xhr.open('GET', channel_id + '/detail');
@@ -79,7 +81,7 @@
                         elm = makePost(channel_id, posts[i][0], posts[i][1], posts[i][2], posts[i][3], posts[i][4]);
                         posts_div.appendChild(elm)
                     }
-                    adjust_buttons(role, channel_id)
+                    adjust_buttons(role, channel_id,expiration=0)
                     posts_div.scrollTo(0, posts_div.scrollHeight);
                 }
                 xhr.onerror = function () {
@@ -89,7 +91,7 @@
             }
         }
 
-        function adjust_buttons(role, channel_id) {
+        function adjust_buttons(role, channel_id,expiration) {
             var buttons_div = document.getElementById("buttons");
             buttons_div.textContent = ""
 
@@ -97,6 +99,10 @@
             base_button.setAttribute("class", "btn btn-warning btn-sm");
             base_button.style.width = "20%"
             base_button.style.margin = "0 0 0 2%"
+
+            var expire = base_button.cloneNode(false);
+            expire.setAttribute("href", channel_id + "/members")
+            expire.innerHTML = 'Expiration :'+expiration
 
             var members = base_button.cloneNode(false);
             members.setAttribute("href", channel_id + "/members")
@@ -158,6 +164,7 @@
             } else {
                 chosen_buttons = [join]
             }
+            chosen_buttons.push(expire)
             chosen_buttons[0].style.margin = "0 0 0 " + (51 - chosen_buttons.length * 11) + "%";
             for (var i = 0; i < chosen_buttons.length; i++) {
                 buttons_div.appendChild(chosen_buttons[i]);
@@ -256,6 +263,91 @@
 
             return li;
         }
+
+        let searchTest = document.getElementById('formSearch')
+        searchTest.addEventListener("change", function (e) {
+            fetch('http://127.0.0.1:8000/search-channel/' + e.target.value, {
+                method: "POST",
+            }).then(function (response) {
+                // The API call was successful!
+                if (response.ok) {
+                    return response.json();
+                }
+                // There was an error
+                return Promise.reject(response);
+            }).then(function (data) {
+                let channels_div = document.getElementById("channels")
+                channels_div.innerHTML = ''
+                for (const item of data.channels) {
+                    const elm = makeChannels(item.channel_id, item.channel_name, item.last_message, item.time);
+                    channels_div.appendChild(elm)
+                }
+            }).catch(function (err) {
+                // There was an error
+                console.warn('Something went wrong.', err);
+            });
+            console.log(e.target.value)
+        })
+
+        {#function searchChannels(element) {#}
+        {#    var el = element.valueOf();#}
+        {#    console.log(element)#}
+        {#    var channels_div = document.getElementById("channels")#}
+        {#    channels_div.textContent = '';#}
+        {#    {% for channel_id, channel_name, last_message, time in channels %}#}
+        {#        var elm = makeChannels('{{ channel_id}}', '{{ channel_name}}', '{{ last_message}}', '{{ time}}');#}
+        {#        channels_div.appendChild(elm)#}
+        {#    {% endfor %}#}
+        {##}
+        {##}
+        {##}
+        {#    var li = document.createElement("li");#}
+        {#    li.setAttribute("class", "p-2 border-bottom");#}
+        {#    li.style.cursor = 'pointer';#}
+        {##}
+        {#    var a = document.createElement('a');#}
+        {#    a.setAttribute("class", "d-flex justify-content-between");#}
+        {#    a.onclick = function () {#}
+        {#        if (focused_channel != null) {#}
+        {#            focused_channel.style.color = '#fad932';#}
+        {#        }#}
+        {#        this.style.color = 'white';#}
+        {#        focused_channel = this;#}
+        {#        getChannelDetail(channel_id);#}
+        {#    }#}
+        {##}
+        {#    li.appendChild(a)#}
+        {##}
+        {##}
+        {#    var outer_div = document.createElement("div");#}
+        {#    outer_div.setAttribute("class", "d-flex flex-row");#}
+        {#    a.appendChild(outer_div)#}
+        {##}
+        {#    var inner_div = document.createElement('div');#}
+        {#    inner_div.setAttribute("class", "pt-1");#}
+        {#    outer_div.appendChild(inner_div);#}
+        {##}
+        {##}
+        {#    var name = document.createElement("p");#}
+        {#    name.setAttribute("class", "fw-bold mb-0");#}
+        {#    name.innerText = channel_name;#}
+        {#    inner_div.appendChild(name)#}
+        {##}
+        {#    var message = document.createElement("p");#}
+        {#    message.setAttribute("class", "small text-muted");#}
+        {#    message.innerText = last_message;#}
+        {#    inner_div.appendChild(message)#}
+        {##}
+        {#    inner_div = document.createElement('div');#}
+        {#    inner_div.setAttribute("class", "pt-1");#}
+        {#    a.appendChild(inner_div);#}
+        {##}
+        {#    var time_elm = document.createElement('p');#}
+        {#    time_elm.setAttribute("class", "small text-muted mb-1");#}
+        {#    time_elm.innerText = time;#}
+        {#    inner_div.appendChild(time_elm);#}
+        {##}
+        {#    return li;#}
 
     </script>
 {% endblock content %}

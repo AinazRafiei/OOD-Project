@@ -14,6 +14,7 @@ from userauth.utils import get_user, Authentication, login_required
 from .forms import ChannelForm, PostForm, TariffFrom
 from .models import Post, Membership, Channel, Share, Tariff, Subscription, PurchasedPost
 from .utils import buy
+from django.http import JsonResponse
 
 
 def create_channel(request):
@@ -135,6 +136,15 @@ class ChannelLeaveView(APIView):
 
 
 class ChannelDetailView(APIView):
+
+    def get_expiration(self, user, channel_id):
+        membership = Membership.objects.get(user_id=user.id, channel_id=channel_id)
+        subscription = Subscription.objects.get(user=membership)
+        until_date = subscription.until_date
+        remaining_time = datetime.datetime.now() - until_date
+        return remaining_time
+
+
     def get(self, request, channel_id, *args, **kwargs):
         user = get_user(request)
         purchased_posts = list(PurchasedPost.objects.filter(user=user).values_list('post_id', flat=True))
@@ -143,9 +153,14 @@ class ChannelDetailView(APIView):
             channel = Channel.objects.get(id=channel_id)
         except Channel.DoesNotExist:
             raise NotFound
+        try:
+            expiration = self.get_expiration(user, channel_id)
+        except:
+            expiration = 0
+            pass
         role = get_role(channel, user)
         return Response(
-            data=dict(role=role, posts=[represent_post(post, role, purchased_posts) for post in posts]))
+            data=dict(role=role, posts=[represent_post(post, role, purchased_posts) for post in posts], expiration=expiration))
 
 
 class ChannelAdminsView(APIView):
@@ -265,13 +280,29 @@ class AllChannelsView(View):
 
 
 class PurchasePostView(APIView):
+
+    def check_the_expiration_date(self, request, channel_id):
+        user = get_user(request)
+        membership = Membership.objects.get(user_id=user.id, channel_id=channel_id)
+        subscription = Subscription.objects.get(user=membership)
+        until_date = subscription.until_date
+        if datetime.datetime.now() < until_date:
+            return True
+        else:
+            return False
+
     def get(self, request, channel_id, post_id, *args, **kwargs):
         try:
             post = Post.objects.get(id=post_id)
         except Post.DoesNotExist:
             return NotFound
+        if self.check_the_expiration_date(request, channel_id):
+            return render(request, 'html/purchase_post.html',
+                          {'channel_id': channel_id, 'title': post.title, 'summary': post.summary, 'price': post.price,
+                           'time': post.published_at, 'channel_name': post.channel.name})
         return render(request, 'html/purchase_post.html',
-                      {'channel_id': channel_id, 'title': post.title, 'summary': post.summary, 'price': post.price,
+                      {'channel_id': channel_id, 'title': post.title, 'summary': 'please buy this post!',
+                       'price': post.price,
                        'time': post.published_at, 'channel_name': post.channel.name})
 
     def post(self, request, channel_id, post_id, *args, **kwargs):
@@ -289,3 +320,38 @@ class PurchasePostView(APIView):
         buy(user, channel_id, post.price)
         PurchasedPost.objects.create(post=post, user=user)
         return redirect(reverse_lazy('channels'))
+
+
+class ShowExpirationView(APIView):
+
+    def get(self, request, channel_id):
+        user = get_user(request)
+        membership = Membership.objects.get(user_id=user.id, channel_id=channel_id)
+
+        try:
+            subscription = Subscription.objects.get(user=membership)
+            until_date = subscription.until_date
+            remaining_time = datetime.datetime.now() - until_date
+            return JsonResponse({'remaining_time': remaining_time})
+        except Subscription.DoesNotExist:
+            return JsonResponse({'message': 'No subscription found.'})
+
+
+class SearchChannelView(APIView):
+    def get_channel_data(self, channel):
+        post = Post.objects.filter(channel_id=channel['id']).order_by('-published_at').first()
+        summary = ''
+        published_at = None
+        if post:
+            summary = post.represent_summary()[1][:16]
+            published_at = post.published_at
+        return {'channel_id': channel['id'], 'channel_name': channel['name'], 'last_message': summary, 'time': published_at.date() if published_at else ''}
+
+    def post(self, request, channel_name):
+        matching_channels = Channel.objects.filter(name__icontains=channel_name)
+        if len(matching_channels) > 0:
+            matching_channels = list(matching_channels.values())
+            channels = [self.get_channel_data(channel) for channel in matching_channels]
+            return JsonResponse({'channels': channels})
+        else:
+            return JsonResponse({'channels': []})
