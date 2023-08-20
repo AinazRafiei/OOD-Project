@@ -56,3 +56,11 @@ class TariffFrom(forms.Form):
         widget = {
             'tariff': forms.Select(attrs={'class': 'form-select form-select-lg mb-3'})
         }
+
+    def __init__(self, *args, **kwargs):
+        channel_id = kwargs.pop("channel_id")
+        super(TariffFrom, self).__init__(*args, **kwargs)
+        if channel_id:
+            self.fields['tariff'] = ModelChoiceField(
+                queryset=Tariff.objects.filter(channel_id=channel_id)
+            )

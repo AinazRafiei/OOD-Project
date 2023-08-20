@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from userauth.models import User
-from userauth.utils import get_user, Authentication, login_required
+from userauth.utils import get_user, login_required
 from .forms import ChannelForm, PostForm, TariffFrom
 from .models import Post, Membership, Channel, Share, Tariff, Subscription, PurchasedPost
 from .utils import buy
@@ -95,6 +95,16 @@ def get_role(channel, user):
 class SubscribeView(FormView):
     form_class = TariffFrom
     template_name = 'html/subscribe.html'
+    channel_id = None
+
+    def get_form_kwargs(self):
+        kwargs = super(SubscribeView, self).get_form_kwargs()
+        kwargs.update({"channel_id": self.channel_id})
+        return kwargs
+
+    def get(self, request, channel_id, *args, **kwargs):
+        self.channel_id = channel_id
+        return super(SubscribeView, self).get(request, *args, **kwargs)
 
     def post(self, request, channel_id, *args, **kwargs):
         form = self.get_form()
