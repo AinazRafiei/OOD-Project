@@ -1,11 +1,11 @@
 from django import forms
 from django.forms import ModelChoiceField
 
-from .models import Channel, Post, Tariff
+from .models import Channel, Post, Plan
 
 
 class PremiumForm(forms.Form):
-    series = ModelChoiceField(queryset=Tariff.objects.all())
+    series = ModelChoiceField(queryset=Plan.objects.all())
 
     class Meta:
         widget = {'series'}
@@ -49,18 +49,20 @@ class PostForm(forms.ModelForm):
         return cleaned_data
 
 
-class TariffFrom(forms.Form):
-    tariff = ModelChoiceField(queryset=Tariff.objects.all())
+class PlanFrom(forms.Form):
+    plan = ModelChoiceField(queryset=Plan.objects.all())
 
     class Meta:
         widget = {
-            'tariff': forms.Select(attrs={'class': 'form-select form-select-lg mb-3'})
+            'plan': forms.Select(attrs={'class': 'form-select form-select-lg mb-3'})
         }
 
     def __init__(self, *args, **kwargs):
         channel_id = kwargs.pop("channel_id")
-        super(TariffFrom, self).__init__(*args, **kwargs)
+        super(PlanFrom, self).__init__(*args, **kwargs)
         if channel_id:
-            self.fields['tariff'] = ModelChoiceField(
-                queryset=Tariff.objects.filter(channel_id=channel_id)
+            self.fields['plan'] = ModelChoiceField(
+                queryset=Plan.objects.filter(channel_id=channel_id),
+                widget=forms.Select(attrs={'class': 'form-select form-select-lg mb-3',
+                                           'style': 'width: 30%; display: inline-block;'})
             )

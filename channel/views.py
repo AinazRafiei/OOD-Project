@@ -11,8 +11,8 @@ from rest_framework.views import APIView
 
 from userauth.models import User
 from userauth.utils import get_user, login_required
-from .forms import ChannelForm, PostForm, TariffFrom
-from .models import Post, Membership, Channel, Share, Tariff, Subscription, PurchasedPost
+from .forms import ChannelForm, PostForm, PlanFrom
+from .models import Post, Membership, Channel, Share, Plan, Subscription, PurchasedPost
 from .utils import buy
 
 
@@ -92,7 +92,7 @@ def get_role(channel, user):
 
 
 class SubscribeView(FormView):
-    form_class = TariffFrom
+    form_class = PlanFrom
     template_name = 'html/subscribe.html'
     channel_id = None
 
@@ -109,15 +109,15 @@ class SubscribeView(FormView):
         self.channel_id = channel_id
         form = self.get_form()
         user = get_user(request)
-        tariff = Tariff.objects.get(id=form.data['tariff'])
+        plan = Plan.objects.get(id=form.data['plan'])
         membership = Membership.objects.get(channel_id=channel_id, user=user)
-        if user.wallet.balance < tariff.price:
-            form.add_error('tariff', 'Insufficient credits')
+        if user.wallet.balance < plan.price:
+            form.add_error('plan', 'Insufficient credits')
             return self.form_invalid(form)
-        buy(user, channel_id, tariff.price)
+        buy(user, channel_id, plan.price)
         Subscription.objects.create(user=membership,
                                     until_date=datetime.datetime.now() + datetime.timedelta(
-                                        days=tariff.duration))
+                                        days=plan.duration))
         membership.role = Membership.Role.Vip
         membership.save()
         return redirect(reverse_lazy('home'))
@@ -239,7 +239,7 @@ class ChannelAdminsView(APIView):
         return self.get(request, channel_id, *args, **kwargs)
 
 
-class ChannelTariffsView(APIView):
+class ChannelPlansView(APIView):
     def get(self, request, channel_id, *args, **kwargs):
         user = get_user(request)
         try:
@@ -248,12 +248,12 @@ class ChannelTariffsView(APIView):
             raise NotFound
         if user != channel.owner:
             raise PermissionDenied
-        tariffs = list()
-        for tariff in Tariff.objects.filter(channel_id=channel.id):
-            tariffs.append((tariff.get_duration_display(), tariff.duration, tariff.price))
-        choices = Tariff.DurationChoice.choices
-        return render(request, 'html/tariff.html',
-                      {"tariffs": tariffs, "choices": choices, "channel_name": channel.name})
+        plans = list()
+        for plan in Plan.objects.filter(channel_id=channel.id):
+            plans.append((plan.get_duration_display(), plan.duration, plan.price))
+        choices = Plan.DurationChoice.choices
+        return render(request, 'html/plan.html',
+                      {"plans": plans, "choices": choices, "channel_name": channel.name})
 
     def post(self, request, channel_id, *args, **kwargs):
         user = get_user(request)
@@ -264,9 +264,9 @@ class ChannelTariffsView(APIView):
         if user != channel.owner:
             raise PermissionDenied
         durations = dict(request.POST).get('duration')
-        Tariff.objects.filter(channel_id=channel.id).delete()
+        Plan.objects.filter(channel_id=channel.id).delete()
         for duration in durations:
-            Tariff.objects.create(channel_id=channel.id, duration=duration, price=request.POST.get(duration))
+            Plan.objects.create(channel_id=channel.id, duration=duration, price=request.POST.get(duration))
         return self.get(request, channel_id, *args, **kwargs)
 
 

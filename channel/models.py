@@ -24,7 +24,7 @@ class Channel(models.Model):
     members = models.ManyToManyField(User, through=Membership, related_name="followings")
 
 
-class Tariff(models.Model):
+class Plan(models.Model):
     class DurationChoice(models.IntegerChoices):
         Month = (30, 'Month')
         ThreeMonths = (90, 'Three Months')

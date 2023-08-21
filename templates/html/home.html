@@ -127,9 +127,9 @@
             admins.setAttribute("href", "/channels/" + channel_id + "/admins")
             admins.innerHTML = 'Admins <i class="fa-solid fa-user-tie"></i>'
 
-            var tariffs = base_button.cloneNode(false);
-            tariffs.setAttribute("href", "/channels/" + channel_id + "/tariffs")
-            tariffs.innerHTML = 'Tariffs <i class="fa-solid fa-gear"></i>'
+            var plans = base_button.cloneNode(false);
+            plans.setAttribute("href", "/channels/" + channel_id + "/plans")
+            plans.innerHTML = 'Plans <i class="fa-solid fa-gear"></i>'
 
             var post = base_button.cloneNode(false);
             post.setAttribute("href", "/channels/" + channel_id + "/post")
@@ -169,7 +169,7 @@
 
             var chosen_buttons;
             if (role === 'owner') {
-                chosen_buttons = [members, admins, tariffs, post]
+                chosen_buttons = [members, admins, plans, post]
             } else if (role === 'admin') {
                 chosen_buttons = [post, leave]
             } else if (role === 'vip') {

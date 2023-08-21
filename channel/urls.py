@@ -17,7 +17,7 @@ Including another URLconf
 from django.urls import path
 
 from channel.views import ChannelDetailView, AllChannelsView, ChannelJoinView, \
-    ChannelLeaveView, ChannelAdminsView, ChannelTariffsView, SubscribeView, create_post, create_channel, show_members, \
+    ChannelLeaveView, ChannelAdminsView, ChannelPlansView, SubscribeView, create_post, create_channel, show_members, \
     PurchasePostView, SearchChannelView
 
 urlpatterns = [
@@ -25,7 +25,7 @@ urlpatterns = [
     path('create', create_channel, name='create_channel'),
     path('<int:channel_id>/detail', ChannelDetailView.as_view(), name='channel_details'),
     path('<int:channel_id>/admins', ChannelAdminsView.as_view(), name='channel_admins'),
-    path('<int:channel_id>/tariffs', ChannelTariffsView.as_view(), name='channel_tariffs'),
+    path('<int:channel_id>/plans', ChannelPlansView.as_view(), name='channel_plans'),
     path('<int:channel_id>/members', show_members, name='show_members'),
     path('<int:channel_id>/post', create_post, name='create_post'),
     path('<int:channel_id>/posts/<int:post_id>/purchase', PurchasePostView.as_view(), name='purchase_post'),
